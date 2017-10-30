@@ -1,0 +1,9 @@
+Testing notes:
+ - speedup
+ - efficiency
+ 
+ Image dimension constant (256), samples per pixel variable:
+		- 4, 8, 16, 32, 64, 128, 256, 512
+		
+Samples per pixel constant (16), image dimension variable:
+		- 128, 256, 512, 1024
