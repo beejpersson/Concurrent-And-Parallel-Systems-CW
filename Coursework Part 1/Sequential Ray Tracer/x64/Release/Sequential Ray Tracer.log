@@ -4,8 +4,8 @@ raytracer.cpp(271): warning C4267: 'argument': conversion from 'size_t' to 'unsi
 raytracer.cpp(273): warning C4267: 'argument': conversion from 'size_t' to 'unsigned long', possible loss of data
 raytracer.cpp(286): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
   Generating code
-  8 of 304 functions ( 2.6%) were compiled, the rest were copied from previous compilation.
+  14 of 304 functions ( 4.6%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     1 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  Sequential Ray Tracer.vcxproj -> C:\Users\40183743\Documents\Concurrent-And-Parallel-Systems-CW\Coursework Part 1\x64\Release\Sequential Ray Tracer.exe
+  Sequential Ray Tracer.vcxproj -> C:\Users\40183743\Documents\C&PS\Concurrent-And-Parallel-Systems-CW\Coursework Part 1\x64\Release\Sequential Ray Tracer.exe

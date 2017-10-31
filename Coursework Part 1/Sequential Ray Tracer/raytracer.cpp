@@ -300,8 +300,8 @@ int main(int argc, char **argv)
 	ofstream results("data.csv", ofstream::out);
 
     // *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-    constexpr size_t dimension = 256;
-    constexpr size_t samples = 2; // Algorithm performs 4 * samples per pixel.
+    constexpr size_t dimension = 1024;
+    constexpr size_t samples = 4; // Algorithm performs 4 * samples per pixel.
     vector<sphere> spheres
     {
         sphere(1e5, vec(1e5 + 1, 40.8, 81.6), vec(), vec(0.75, 0.25, 0.25), reflection_type::DIFFUSE),
@@ -324,7 +324,7 @@ int main(int argc, char **argv)
 
 	results << "Test, Image Dimensions, Samples Per Pixel, Time, " << endl;
 
-	for (unsigned int i = 0; i < 100; ++i)
+	for (unsigned int i = 0; i < 25; ++i)
 	{
 		// **** TIME FROM HERE... ****
 		auto start = system_clock::now();
