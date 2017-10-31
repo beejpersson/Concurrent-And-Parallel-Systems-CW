@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 	auto get_random_number = bind(distribution, generator);
 
 	// *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-	constexpr size_t dimension = 1024;
+	constexpr size_t dimension = 256;
 	constexpr size_t samples = 4; // Algorithm performs 4 * samples per pixel.
 	vector<sphere> spheres
 	{
@@ -327,7 +327,7 @@ int main(int argc, char **argv)
 
 	results << "Test, Image Dimensions, Samples Per Pixel, Time, " << endl;
 
-	for (unsigned int j = 0; j < 100; ++j)
+	for (unsigned int j = 0; j < 1; ++j)
 	{
 		ray camera(vec(50, 52, 295.6), vec(0, -0.042612, -1).normal());
 		vec cx = vec(0.5135);
