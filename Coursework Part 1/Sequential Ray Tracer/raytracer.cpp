@@ -327,7 +327,7 @@ int main(int argc, char **argv)
 
 	results << "Test, Image Dimensions, Samples Per Pixel, Time, " << endl;
 
-	for (unsigned int j = 0; j < 1; ++j)
+	for (unsigned int j = 0; j < 20; ++j)
 	{
 		ray camera(vec(50, 52, 295.6), vec(0, -0.042612, -1).normal());
 		vec cx = vec(0.5135);
@@ -338,7 +338,7 @@ int main(int argc, char **argv)
 
 		// **** TIME FROM HERE... ****
 		auto start = system_clock::now();
-#pragma omp parallel for num_threads(num_threads) private(y)
+#pragma omp parallel for num_threads(num_threads) private(y, r)
 		for (y = 0; y < dimension; ++y)
 		{
 			//cout << "Rendering " << dimension << " * " << dimension << "pixels. Samples:" << samples * 4 << " spp (" << 100.0 * y / (dimension - 1) << ")" << endl;
@@ -348,7 +348,7 @@ int main(int argc, char **argv)
 				{
 					for (size_t sx = 0; sx < 2; ++sx)
 					{
-						vec r = vec();
+						r = vec();
 						for (size_t s = 0; s < samples; ++s)
 						{
 							double r1 = 2 * get_random_number(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
