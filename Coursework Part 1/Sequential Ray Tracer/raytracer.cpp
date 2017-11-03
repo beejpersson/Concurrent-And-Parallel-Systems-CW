@@ -306,8 +306,8 @@ int main(int argc, char **argv)
 	auto get_random_number = bind(distribution, generator);
 
 	// *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-	constexpr size_t dimension = 256;
-	constexpr size_t samples = 4; // Algorithm performs 4 * samples per pixel.
+	constexpr size_t dimension = 1024;
+	constexpr size_t samples = 256; // Algorithm performs 4 * samples per pixel.
 	vector<sphere> spheres
 	{
 		sphere(1e5, vec(1e5 + 1, 40.8, 81.6), vec(), vec(0.75, 0.25, 0.25), reflection_type::DIFFUSE),
@@ -327,19 +327,19 @@ int main(int argc, char **argv)
 
 	results << "Test, Image Dimensions, Samples Per Pixel, Time, " << endl;
 
-	for (unsigned int j = 0; j < 20; ++j)
+	for (unsigned int j = 0; j < 2; ++j)
 	{
 		ray camera(vec(50, 52, 295.6), vec(0, -0.042612, -1).normal());
 		vec cx = vec(0.5135);
 		vec cy = (cx.cross(camera.direction)).normal() * 0.5135;
 		vec r;
 		vector<vec> pixels(dimension * dimension);
-		int y;
+		//int y;
 
 		// **** TIME FROM HERE... ****
 		auto start = system_clock::now();
-#pragma omp parallel for num_threads(num_threads) private(y, r)
-		for (y = 0; y < dimension; ++y)
+//#pragma omp parallel for num_threads(num_threads) private(y, r)
+		for (size_t y = 0; y < dimension; ++y)
 		{
 			//cout << "Rendering " << dimension << " * " << dimension << "pixels. Samples:" << samples * 4 << " spp (" << 100.0 * y / (dimension - 1) << ")" << endl;
 			for (size_t x = 0; x < dimension; ++x)

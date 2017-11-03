@@ -7,3 +7,8 @@ Testing notes:
 		
 Samples per pixel constant (16), image dimension variable:
 		- 128, 256, 512, 1024
+
+
+Large sample / image tests -> seq vs par
+
+Do more parallel methods, determine best speed up, more tests with that one
