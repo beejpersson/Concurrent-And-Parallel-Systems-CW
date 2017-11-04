@@ -1,4 +1,4 @@
-\documentclass[journal,transmag]{IEEEtran}
+	\documentclass[journal,transmag]{IEEEtran}
 
 \usepackage{cite}
 \usepackage[pdftex]{graphicx}
@@ -54,7 +54,7 @@
 		\IEEEauthorblockA{School of Computing,
 			Edinburgh Napier University, Edinburgh}% <-this % stops an unwanted space
 		
-		\thanks{Submitted 5/11/17.}}
+		\thanks{November 2017}}
 	
 	
 	\markboth{40183743}{}
@@ -62,12 +62,12 @@
 	
 	\IEEEtitleabstractindextext{
 		\begin{abstract}
-			For part 1 of the coursework required for the SET10108 Concurrent and Parallel Systems module at Edinburgh Napier University a ray tracing algorithm's performance was to be evaluated and improved by utilising parallel techniques. This report documents one such investigation where the algorithm was parallelised and the difference in its performance was measured.
+			For part 1 of the coursework required for the SET10108 Concurrent and Parallel Systems module at Edinburgh Napier University a ray tracing algorithm's performance was to be evaluated and improved by utilising parallel techniques. This report documents one such investigation where the algorithm was parallelised and the difference in its	 performance was measured. 
 		\end{abstract}
 		
 		\begin{IEEEkeywords}
-			parallel, ray tracer, OpenMP, C++11, performance, speedup.
-	\end{IEEEkeywords}}
+			parallel, ray tracer, \textsc{OpenMP}, C++11, performance, speedup.
+		\end{IEEEkeywords}}
 	
 	\maketitle
 	
@@ -96,7 +96,11 @@
 	Description and justification of the approach used and
 	its overall suitability and rigour. [5]
 	
-	\begin{table}[!h]
+	A systematic approach was undertaken to evaluate the performance of the algorithm and attempt to measure any improvements in performance gained by parallelising the algorithm.
+	
+	The first step was to run a series of tests on the provided sequential algorithm to provide a base-line that the performance of the different parallel techniques could be compared to. These tests were all done on the same hardware, the relevant specifications of which are shown in table \ref{hardware}. The dependent variable being measured was the amount of time it took for the algorithm to produce all the data in the pixel vector, which is used to generate the final image. The independent variables were the dimensions of the image and the number of samples per pixel. First the image size was kept constant at 256x256 whilst the number of samples per pixel was incremented, by powers of 2, from 4 up to 512. After this the samples per pixel was kept constant at 16 whilst the dimensions of the image were incremented, again by powers of 2, from 128x128 up to 1024x1024. For each change in the independent variables, 100 tests were run and the time it took for the algorithm to produce the data recorded, before the average run times were calculated. Further to this, 2 tests were run with a large image size of 1024x1024 and 1024 samples per pixel. This was only done twice due to how long it took for the algorithm to generate the image, but was still useful for comparison.
+	
+	\begin{table}[!t]
 		\renewcommand{\arraystretch}{1.3}
 		\caption{Hardware Specifications}
 		\label{hardware}
@@ -109,45 +113,43 @@
 		\end{tabular}
 	\end{table}
 	
-	\lipsum[1-2]
+	After these benchmarks for the sequential algorithm were recorded, a few different parallelising techniques were applied to the algorithm and tests were run to gain an idea of their performance. The techniques used were manual multi-threading and OpenMP.
+	
+	\subsection{Manual Multi-Threading}
+	To parallelise the algorithm using manual multi-threading the set of for loops seen in Listing 1 were added to a single method which could then be run on multiple threads, as shown in Listing 2.
+	
+	\lstinputlisting[caption = The for loop used to run the forLoopAlgorithm method accross the required number of threads. The variables that are passed to the method are removed for clarity.]{./sourceCode/manualmulti-threading.cpp}
+	
+	\subsection{OpenMP}
+	
+	OpenMP is an API that supports shared-memory parallel programming and allows some additional manipulations on the code that were used to attempt to increase performance. The pre-processor argument shown in Listing 3 was used to parallelise the outer for loop, allowing the algorithm to be run across multiple threads.
+	
+	\lstinputlisting[caption = The OpenMP parallel for used to parallelise the shown for loop across the number of threads desired. The removed nested for loops can be seen in Listing 1.]{./sourceCode/omp.cpp}
+	
+	OpenMP's parallel for function comes with some options than can be used to change the way it spreads the workload across the threads.
 	
 	\section{Results and Discussion}
 	Suitable performance analysis and testing documentation
 	for the problem, including quality of presentation of
-	the results.
-[10]
+	the results. [10]
 	
 	\section{Conclusion}
 	Level of discussion and appropriateness of the conclusions
 	drawn based on the results gathered. [10]
 	
-	\begin{figure}[!t]
+	\begin{figure}[!h]
 		\centering
 		\includegraphics[width= 0.5\textwidth]{IMAGES/exampleImage}
 		\caption{A Fucking Sad Frog.}
 		\label{fig_frog}
 	\end{figure}
 	
-	\begin{figure}[!t]
+	\begin{figure}[!h]
 		\centering
 		\includegraphics[width= 0.5\textwidth]{IMAGES/fig2}
 		\caption{A Fucking Pupper.}
 		\label{fig_pup}
 	\end{figure}
-	
-	\begin{table}[!t]
-		\renewcommand{\arraystretch}{1.3}
-		\caption{An Example of a fucking Table}
-		\label{table_example}
-		\centering
-		\begin{tabular}{|c|c|}
-			\hline
-			One & Two\\
-			\hline
-			Three & Fuck\\
-			\hline
-		\end{tabular}
-	\end{table}
 	
 	\section{Conclusion}
 	The fucking conclusion goes here.
