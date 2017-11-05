@@ -274,19 +274,15 @@
 	Combined, these two effects make a significant effect on the parallelised algorithm's efficiency ratings. Whilst both parallel algorithms that used OpenMP were only very slightly faster on a single thread than the sequential algorithm, the manually multi-threaded algorithm had a speedup of 1.42 whilst still operating on a single thread. This shows that the performance gained by manually multi-threading the algorithm had much less to do with running the algorithm over multiple threads than the performance gained by the OpenMP parallelised algorithms. The speedup from the hyper-threading, however was more even across the parallelised algorithms.
 	
 	\subsection{Final Thoughts}
-	The provided sequential algorithm originally took a considerable amount of time to produce large images of quality. The attempts at parallelising the algorithm were largely successful.
-	
-	\newpage
-	
-	\appendices
-	\section{Proof of fucking something}
-	Appendix one text goes fucking here.
-	\lstinputlisting[caption = A fucking code listing.]{./sourceCode/hello.cpp}
-	
-	\section{}
-	Fucking appendix two text goes here.
+	The provided sequential algorithm originally took a considerable amount of time to produce large images of quality. The attempts at parallelising the algorithm were largely successful. They all performed significantly faster than the sequential algorithm and made the time to generate large images of high detail more manageable. However, whilst running on multiple threads did provide speedup, an important part of the increased performance of the algorithms was due to external optimisations. The attempt at manually multi-threading the algorithm benefited the most from this and as such ended up outperforming both versions of parallelisation using OpenMP. In terms of increased performance purely due to running the algorithm across multiple threads the algorithm that was dynamically scheduled using OpenMP was the top performer.
 	
 	\bibliographystyle{IEEEtran}
 	\bibliography{bibliography}
+	
+	\newpage
+	\onecolumn
+	\appendices
+	\section{raytracer.cpp}
+	\lstinputlisting[caption = The source code for the raytracer.cpp including all the added parallelisation techniques.]{./sourceCode/raytracer.cpp}
 	
 \end{document}

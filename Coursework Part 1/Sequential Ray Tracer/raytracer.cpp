@@ -20,10 +20,9 @@ using namespace std::chrono;
 constexpr size_t MAX_DEPTH = 512; // Upper limit on recursion, increase this on systems with more stack size.
 constexpr double PI = 3.14159265359;
 
-auto num_threads = thread::hardware_concurrency();
 
 // Get number of supported threads
-
+auto num_threads = thread::hardware_concurrency();
 
 template <class T, class Compare>
 constexpr const T &clamp(const T &v, const T &lo, const T &hi, Compare comp)
@@ -298,14 +297,14 @@ bool array2bmp(const std::string &filename, const vector<vec> &pixels, const siz
 	return f.good();
 }
 
-// Required for manual threading to allow method to update pixel vector
+// Required for manual threading to allow forLoopAlgorithm method to update pixel vector
 vector<vec> pixels;
 
+// Nested for loop method, to be manually multi-threaded
 void forLoopAlgorithm(unsigned int threads, size_t dimension, unsigned int num_threads, size_t samples, _Binder<_Unforced, uniform_real_distribution<double>&, default_random_engine&> get_random_number, vec r, vec cx, vec cy, vector<sphere> spheres, ray camera)
 {
 	for (size_t y = threads; y < dimension; y += num_threads)
 	{
-		//cout << "Rendering " << dimension << " * " << dimension << "pixels. Samples:" << samples * 4 << " spp (" << 100.0 * y / (dimension - 1) << ")" << endl;
 		for (size_t x = 0; x < dimension; ++x)
 		{
 			for (size_t sy = 0, i = (dimension - y - 1) * dimension + x; sy < 2; ++sy)
@@ -354,19 +353,23 @@ int main(int argc, char **argv)
 	// Create results file
 	ofstream results("data.csv", ofstream::out);
 
+    // Output headers to results file
 	results << "Test, Image Dimensions, Samples Per Pixel, Time, " << endl;
 
-	for (unsigned int j = 0; j < 50; ++j)
+    // Run test iterations
+	for (unsigned int j = 0; j < 100; ++j)
 	{
 		ray camera(vec(50, 52, 295.6), vec(0, -0.042612, -1).normal());
 		vec cx = vec(0.5135);
 		vec cy = (cx.cross(camera.direction)).normal() * 0.5135;
 		vec r;
+
         // Required for manual threading
 		pixels.resize(dimension * dimension);
+
         // Required for OpenMP
 		//vector<vec> pixels(dimension * dimension);
-		int y;
+		//int y;
 
 		// * TIME FROM HERE... *
 		auto start = system_clock::now();
@@ -381,7 +384,7 @@ int main(int argc, char **argv)
 		for (auto &t : threads)
 			t.join();
 
-//		// *** OPENMP ***
+//		// *** OPENMP *** (change scheduling to "dynamic" or "static")
 //#pragma omp parallel for num_threads(4) private(y, r) schedule(dynamic)
 //		for (y = 0; y < dimension; ++y)
 //		{
@@ -408,9 +411,14 @@ int main(int argc, char **argv)
 		// * ...TO HERE *
 		auto end = system_clock::now();
 		auto total = duration_cast<milliseconds>(end - start).count();
+        
+        // Output test no., variables and total time to results file
 		results << j + 1 << ", " << dimension << ", " << samples * 4 << ", " << total << endl;
+
+        // Output test information to consolde outside of the timings to not slow algorithm
 		cout << "Test " << j + 1 << " complete. Time = " << total << "." <<  num_threads << endl;
 		array2bmp("img.bmp", pixels, dimension, dimension);
+
         // Required for manual threading
 		pixels.clear();
 	}
