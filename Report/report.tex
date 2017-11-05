@@ -9,6 +9,7 @@
 \interdisplaylinepenalty=2500
 \usepackage{algorithmic}
 \usepackage{array}
+\usepackage{booktabs}
 \usepackage[caption=false,font=normalsize,labelfont=sf,textfon =sf]{subfig}
 \usepackage{dblfloatfix}
 \usepackage{url}
@@ -121,43 +122,83 @@
 	
 	\lstinputlisting[caption = The OpenMP parallel for used to parallelise the shown for loop across the number of threads desired. The removed nested for loops can be seen in Listing 1.]{./sourceCode/omp.cpp}
 	
-	OpenMP's parallel for function comes with a \textsl{schedule} clause, seen in Listing 3, that can be used to change the way it spreads the workload across the threads. By default, OpenMP statically assigns each for loop iteration to a thread. However, if each iteration takes a different amount of time, it can be beneficial to use dynamic scheduling. When scheduled dynamically the threads can request work when ready and be assigned the next iteration that hasn't been executed yet. Given that this may further improve the performance of the ray tracing algorithm, both types of scheduling were tested.
+	OpenMP's parallel for function comes with a \textit{schedule} clause, seen in Listing 3, that can be used to change the way it spreads the workload across the threads. By default, OpenMP statically assigns each for loop iteration to a thread. However, if each iteration takes a different amount of time, it can be beneficial to use dynamic scheduling. When scheduled dynamically the threads can request work when ready and be assigned the next iteration that hasn't been executed yet. Given that this may further improve the performance of the ray tracing algorithm, both types of scheduling were tested.
 	
 	\subsection{Testing}
 	The same series of tests that were run on the sequential algorithm were then undertaken for each implemented parallelisation. These tests were done under the same conditions and on the same hardware to eliminate discrepancies. The testing parameters used to evaluate the performance of the algorithms is outlined below.
 	
-	The dependent variable being measured was the amount of time it took for the algorithms to produce all the data in the pixel vector, which is used to generate the final image. The independent variables were the dimensions of the image and the number of samples per pixel. First the image size was kept constant at 256x256 whilst the number of samples per pixel was incremented, by powers of 2, from 4 up to 512. After this the samples per pixel was kept constant at 16 whilst the dimensions of the image were incremented, again by powers of 2, from 128x128 up to 1024x1024. For each change in the independent variables, 100 tests were run and the time it took for the algorithm to produce the data recorded, before the average run times were calculated. Further to this, 2 tests were run with a large image size of 1024x1024 and 1024 samples per pixel. This was only done twice due to how long it took for the sequential algorithm to generate the image, but was still useful for comparison. Further to this, a few additional tests were done on each parallel algorithm where the number of threads they ran on would be controlled. This was done to help contextualise whether the potential performance increase came from the number of additional threads or from changes to the algorithm itself.
+	The dependent variable being measured was the amount of time it took for the algorithms to produce all the data in the pixel vector, which is used to generate the final image. The independent variables were the dimensions of the image and the number of samples per pixel. First the image size was kept constant at 256x256 whilst the number of samples per pixel was incremented, by powers of 2, from 4 up to 512. After this the samples per pixel was kept constant at 16 whilst the dimensions of the image were incremented, again by powers of 2, from 128x128 up to 1024x1024. For each change in the independent variables, 100 tests were run and the time it took for the algorithm to produce the data recorded, before the average run times were calculated. Further to this, 2 tests were run with a large image size of 1024x1024 and 1024 samples per pixel. This was only done twice due to how long it took for the sequential algorithm to generate the image, but was still useful for comparison. Further to this, a few additional tests were done on each parallel algorithm where the number of threads they ran on were controlled. This was done to help contextualise whether the potential performance increase came from the number of additional threads or from changes to the algorithm itself.
 	
+	\subsection{Evaluation}
 	The results of these tests were then collated and compared to the results from the sequential algorithm's testing and used as the basis for the evaluation of	their respective performance.
 	
+	To represent the improved performance, the efficiency, $E$, of the algorithms was calculated using the formula shown in Equation \ref{efficiency} below:
+	
+	\begin{equation} \label{efficiency} 
+	E = \dfrac{S}{p} = \dfrac{(\dfrac{T_{serial}}{T_{parallel}})}{p}
+	\end{equation}
+	
+	Where $S$ is speedup, $p$ is the number of processor cores, and $T_{serial}$ and $T_{parallel}$ are the sequential and parallel computational times respectively.
+	
 	\section{Results and Discussion}
+	The results from the testing done on the algorithms can be seen summarised in tables \ref{comptable1} below. As discussed in the initial analysis there is an almost perfect positive correlation between the average time and the increasing samples per pixel and image dimensions for the sequential algorithm, but this also holds true for parallel algorithms.
+	
+	\begin{table}[!h]
+		\caption{256x256 Image Generation Performance Comparison}
+		\label{comptable1}
+		\centering
+		\resizebox{\columnwidth}{!}{%
+		\begin{tabular}{@{}ccccc@{}}
+			\toprule
+			\multicolumn{5}{c}{Image Dimensions 256x256} \\ \midrule
+			\multicolumn{1}{c|}{Algorithm} & \multicolumn{1}{c}{Sequential} & \multicolumn{1}{c}{OpenMP Static} & \multicolumn{1}{c}{OpenMP Dynamic} & \multicolumn{1}{c}{Manual Multi-Threading} \\ \midrule
+			\multicolumn{1}{c|}{Samples Per Pixel} & \multicolumn{4}{c}{Average Time / ms} \\ \midrule
+			\multicolumn{1}{c|}{4} & 1.0 & \multicolumn{1}{c|}{1.0} & 1.7 & 0.989 \\
+			\multicolumn{1}{c|}{8} & 1.0 & \multicolumn{1}{c|}{1.0} & 2.5 & 0.920 \\
+			\multicolumn{1}{c|}{16} & 1.0 & \multicolumn{1}{c|}{1.0} & 3.5 & 0.919 \\
+			\multicolumn{1}{c|}{32} & 1.0 & \multicolumn{1}{c|}{1.0} & 3.4 & 0.901 \\
+			\multicolumn{1}{c|}{64} & 1.0 & \multicolumn{1}{c|}{1.0} & 25.5 & 0.962 \\
+			\multicolumn{1}{c|}{128} & 1.0 & \multicolumn{1}{c|}{1.0} & 82.9 & 0.949 \\
+			\multicolumn{1}{c|}{256} & 1.0 & \multicolumn{1}{c|}{1.0} & 183.6 & 0.968 \\
+			\multicolumn{1}{c|}{512} & 1.0 & \multicolumn{1}{c|}{1.0} & 335.1 & 0.968 \\ \bottomrule
+		\end{tabular}%
+		}
+	\end{table}
+	
+	A graph comparing the average time taken for the algorithms to generate the data required to produce a 256x256 image at different numbers of samples per pixel is shown below in Figure \ref{fig1}.
+	
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=\columnwidth]{IMAGES/performancecomparison1}
+		\caption{A graph showing the average time it took each algorithm to generate a 256x256 image at different numbers of samples per pixel.}
+		\label{fig1}
+	\end{figure}
+	
+	As the number of samples per pixel were incremented in powers of 2, the data is discrete and the $x$-axis has been displayed using a base-2 logarithmic scale. As a result of this the $y$-axis is also displayed using a base-2 logarithmic scale so that data does not appear skewed. Here we can see that all the parallel algorithms show significant speed up over the sequential algorithm, with the manual multi-threading being the fastest.
+
+	
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=\columnwidth]{IMAGES/performancecomparison2}
+		\caption{A graph showing the average time it took each algorithm to generate images of varying dimensions at 16 samples per pixel.}
+		\label{fig2}
+	\end{figure}
+
+
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=\columnwidth]{IMAGES/singlethreadperformance}
+		\caption{A graph showing the average time it took each algorithm to generate a 256x256 image at 16 samples per pixel whilst limited to a single thread.}
+		\label{fig3}
+	\end{figure}
+
 	Suitable performance analysis and testing documentation
 	for the problem, including quality of presentation of
 	the results. [10]
-	The results from the testing done on the algorithms can be seen summarised in tables \ref{hardware} below. As discussed in the initial analysis there is an almost perfect positive correlation between the average time and the increasing samples per pixel and image dimensions.
 	
 	\section{Conclusion}
 	Level of discussion and appropriateness of the conclusions
 	drawn based on the results gathered. [10]
-	
-	\begin{figure}[!h]
-		\centering
-		\includegraphics[width= 0.5\textwidth]{IMAGES/exampleImage}
-		\caption{A Fucking Sad Frog.}
-		\label{fig_frog}
-	\end{figure}
-	
-	\begin{figure}[!h]
-		\centering
-		\includegraphics[width= 0.5\textwidth]{IMAGES/fig2}
-		\caption{A Fucking Pupper.}
-		\label{fig_pup}
-	\end{figure}
-	
-	\section{Conclusion}
-	The fucking conclusion goes here.
-	
-		{F}{uck}, this is a template for fucking IEEE transaction reports. \textsc{This bit of text is fucking different.} \LaTeX\ is dead, I don't think anyone actually uses it, and we are all being strung along on a terrible joke.
 	
 	\newpage
 	
@@ -168,9 +209,6 @@
 	
 	\section{}
 	Fucking appendix two text goes here.
-	
-	\section*{Acknowledgement}
-	The author would like to fucking thank...
 	
 	\bibliographystyle{IEEEtran}
 	\bibliography{bibliography}

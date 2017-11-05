@@ -298,6 +298,7 @@ bool array2bmp(const std::string &filename, const vector<vec> &pixels, const siz
 	return f.good();
 }
 
+// Required for manual threading to allow method to update pixel vector
 vector<vec> pixels;
 
 void forLoopAlgorithm(unsigned int threads, size_t dimension, unsigned int num_threads, size_t samples, _Binder<_Unforced, uniform_real_distribution<double>&, default_random_engine&> get_random_number, vec r, vec cx, vec cy, vector<sphere> spheres, ray camera)
@@ -361,7 +362,9 @@ int main(int argc, char **argv)
 		vec cx = vec(0.5135);
 		vec cy = (cx.cross(camera.direction)).normal() * 0.5135;
 		vec r;
+        // Required for manual threading
 		pixels.resize(dimension * dimension);
+        // Required for OpenMP
 		//vector<vec> pixels(dimension * dimension);
 		int y;
 
@@ -408,6 +411,7 @@ int main(int argc, char **argv)
 		results << j + 1 << ", " << dimension << ", " << samples * 4 << ", " << total << endl;
 		cout << "Test " << j + 1 << " complete. Time = " << total << "." <<  num_threads << endl;
 		array2bmp("img.bmp", pixels, dimension, dimension);
+        // Required for manual threading
 		pixels.clear();
 	}
 
