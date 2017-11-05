@@ -334,8 +334,8 @@ int main(int argc, char **argv)
 	auto get_random_number = bind(distribution, generator);
 
 	// *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-	constexpr size_t dimension = 256;
-	constexpr size_t samples = 16; // Algorithm performs 4 * samples per pixel.
+	constexpr size_t dimension = 1024;
+	constexpr size_t samples = 256; // Algorithm performs 4 * samples per pixel.
 	vector<sphere> spheres
 	{
 		sphere(1e5, vec(1e5 + 1, 40.8, 81.6), vec(), vec(0.75, 0.25, 0.25), reflection_type::DIFFUSE),
@@ -355,7 +355,7 @@ int main(int argc, char **argv)
 
 	results << "Test, Image Dimensions, Samples Per Pixel, Time, " << endl;
 
-	for (unsigned int j = 0; j < 50; ++j)
+	for (unsigned int j = 0; j < 2; ++j)
 	{
 		ray camera(vec(50, 52, 295.6), vec(0, -0.042612, -1).normal());
 		vec cx = vec(0.5135);
@@ -371,9 +371,9 @@ int main(int argc, char **argv)
 		//// *** MANUAL MULTITHREADING ***
 		//vector<thread> threads;
 		//
-		//for (unsigned int t = 0; t < 1; ++t)
+		//for (unsigned int t = 0; t < num_threads; ++t)
 		//{
-		//	threads.push_back(thread(forLoopAlgorithm, t, dimension, 1, samples, get_random_number, r, cx, cy, spheres, camera));
+		//	threads.push_back(thread(forLoopAlgorithm, t, dimension, num_threads, samples, get_random_number, r, cx, cy, spheres, camera));
 		//}
 		//for (auto &t : threads)
 		//	t.join();
