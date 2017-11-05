@@ -263,9 +263,6 @@
 	Further to this, Figure \ref{graph4} shows that there was significant speedup for all the parallelised algorithms when ran on 8 threads instead of 4. The hardware used had 4 cores but allowed for hyper-threading to 8 threads and was potentially a reason for why the efficiencies of more than 1 arose.
 	
 	\section{Conclusion}
-	Level of discussion and appropriateness of the conclusions
-	drawn based on the results gathered. [10]
-	
 	\subsection{Explanation of Results and Evaluation of Performance}
 	Across all the tested algorithms, when either the dimensions of the image or the number of samples per pixel were increased, the time it took to produce the data in the pixel vector used to generate the image would increase with near perfect positive correlation. Furthermore, as shown in Figures \ref{graph1} and \ref{graph2}, independent of whether the image dimensions or the samples per pixels were changed, each of the parallelised algorithms significantly outperformed the sequential algorithm. Compared against each other, OpenMP with static scheduling was always outperformed by both OpenMP with dynamic scheduling	 and the manually multi-threaded algorithm. The manually multi-threading algorithm was generally equal to, or very slightly faster than OpenMP with dynamic scheduling.
 	
