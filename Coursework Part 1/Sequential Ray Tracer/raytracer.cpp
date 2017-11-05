@@ -298,33 +298,33 @@ bool array2bmp(const std::string &filename, const vector<vec> &pixels, const siz
 	return f.good();
 }
 
-//vector<vec> pixels;
-//
-//void forLoopAlgorithm(unsigned int threads, size_t dimension, unsigned int num_threads, size_t samples, _Binder<_Unforced, uniform_real_distribution<double>&, default_random_engine&> get_random_number, vec r, vec cx, vec cy, vector<sphere> spheres, ray camera)
-//{
-//	for (size_t y = threads; y < dimension; y += num_threads)
-//	{
-//		//cout << "Rendering " << dimension << " * " << dimension << "pixels. Samples:" << samples * 4 << " spp (" << 100.0 * y / (dimension - 1) << ")" << endl;
-//		for (size_t x = 0; x < dimension; ++x)
-//		{
-//			for (size_t sy = 0, i = (dimension - y - 1) * dimension + x; sy < 2; ++sy)
-//			{
-//				for (size_t sx = 0; sx < 2; ++sx)
-//				{
-//					r = vec();
-//					for (size_t s = 0; s < samples; ++s)
-//					{
-//						double r1 = 2 * get_random_number(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
-//						double r2 = 2 * get_random_number(), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
-//						vec direction = cx * static_cast<double>(((sx + 0.5 + dx) / 2 + x) / dimension - 0.5) + cy * static_cast<double>(((sy + 0.5 + dy) / 2 + y) / dimension - 0.5) + camera.direction;
-//						r = r + radiance(spheres, ray(camera.origin + direction * 140, direction.normal()), 0) * (1.0 / samples);
-//					}
-//					pixels[i] = pixels[i] + vec(clamp(r.x, 0.0, 1.0), clamp(r.y, 0.0, 1.0), clamp(r.z, 0.0, 1.0)) * 0.25;
-//				}
-//			}
-//		}
-//	}
-//}
+vector<vec> pixels;
+
+void forLoopAlgorithm(unsigned int threads, size_t dimension, unsigned int num_threads, size_t samples, _Binder<_Unforced, uniform_real_distribution<double>&, default_random_engine&> get_random_number, vec r, vec cx, vec cy, vector<sphere> spheres, ray camera)
+{
+	for (size_t y = threads; y < dimension; y += num_threads)
+	{
+		//cout << "Rendering " << dimension << " * " << dimension << "pixels. Samples:" << samples * 4 << " spp (" << 100.0 * y / (dimension - 1) << ")" << endl;
+		for (size_t x = 0; x < dimension; ++x)
+		{
+			for (size_t sy = 0, i = (dimension - y - 1) * dimension + x; sy < 2; ++sy)
+			{
+				for (size_t sx = 0; sx < 2; ++sx)
+				{
+					r = vec();
+					for (size_t s = 0; s < samples; ++s)
+					{
+						double r1 = 2 * get_random_number(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
+						double r2 = 2 * get_random_number(), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
+						vec direction = cx * static_cast<double>(((sx + 0.5 + dx) / 2 + x) / dimension - 0.5) + cy * static_cast<double>(((sy + 0.5 + dy) / 2 + y) / dimension - 0.5) + camera.direction;
+						r = r + radiance(spheres, ray(camera.origin + direction * 140, direction.normal()), 0) * (1.0 / samples);
+					}
+					pixels[i] = pixels[i] + vec(clamp(r.x, 0.0, 1.0), clamp(r.y, 0.0, 1.0), clamp(r.z, 0.0, 1.0)) * 0.25;
+				}
+			}
+		}
+	}
+}
 
 int main(int argc, char **argv)
 {
@@ -334,8 +334,8 @@ int main(int argc, char **argv)
 	auto get_random_number = bind(distribution, generator);
 
 	// *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-	constexpr size_t dimension = 1024;
-	constexpr size_t samples = 256; // Algorithm performs 4 * samples per pixel.
+	constexpr size_t dimension = 256;
+	constexpr size_t samples = 16; // Algorithm performs 4 * samples per pixel.
 	vector<sphere> spheres
 	{
 		sphere(1e5, vec(1e5 + 1, 40.8, 81.6), vec(), vec(0.75, 0.25, 0.25), reflection_type::DIFFUSE),
@@ -355,52 +355,52 @@ int main(int argc, char **argv)
 
 	results << "Test, Image Dimensions, Samples Per Pixel, Time, " << endl;
 
-	for (unsigned int j = 0; j < 2; ++j)
+	for (unsigned int j = 0; j < 50; ++j)
 	{
 		ray camera(vec(50, 52, 295.6), vec(0, -0.042612, -1).normal());
 		vec cx = vec(0.5135);
 		vec cy = (cx.cross(camera.direction)).normal() * 0.5135;
 		vec r;
-		//pixels.resize(dimension * dimension);
-		vector<vec> pixels(dimension * dimension);
+		pixels.resize(dimension * dimension);
+		//vector<vec> pixels(dimension * dimension);
 		int y;
 
 		// * TIME FROM HERE... *
 		auto start = system_clock::now();
 
-		//// *** MANUAL MULTITHREADING ***
-		//vector<thread> threads;
-		//
-		//for (unsigned int t = 0; t < num_threads; ++t)
-		//{
-		//	threads.push_back(thread(forLoopAlgorithm, t, dimension, num_threads, samples, get_random_number, r, cx, cy, spheres, camera));
-		//}
-		//for (auto &t : threads)
-		//	t.join();
-
-		// *** OPENMP ***
-#pragma omp parallel for num_threads(num_threads) private(y, r) schedule(dynamic)
-		for (y = 0; y < dimension; ++y)
+		// *** MANUAL MULTITHREADING ***
+		vector<thread> threads;
+		
+		for (unsigned int t = 0; t < 4; ++t)
 		{
-			for (size_t x = 0; x < dimension; ++x)
-			{
-				for (size_t sy = 0, i = (dimension - y - 1) * dimension + x; sy < 2; ++sy)
-				{
-					for (size_t sx = 0; sx < 2; ++sx)
-					{
-						r = vec();
-						for (size_t s = 0; s < samples; ++s)
-						{
-							double r1 = 2 * get_random_number(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
-							double r2 = 2 * get_random_number(), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
-							vec direction = cx * static_cast<double>(((sx + 0.5 + dx) / 2 + x) / dimension - 0.5) + cy * static_cast<double>(((sy + 0.5 + dy) / 2 + y) / dimension - 0.5) + camera.direction;
-							r = r + radiance(spheres, ray(camera.origin + direction * 140, direction.normal()), 0) * (1.0 / samples);
-						}
-						pixels[i] = pixels[i] + vec(clamp(r.x, 0.0, 1.0), clamp(r.y, 0.0, 1.0), clamp(r.z, 0.0, 1.0)) * 0.25;
-					}
-				}
-			}
+			threads.push_back(thread(forLoopAlgorithm, t, dimension, 4, samples, get_random_number, r, cx, cy, spheres, camera));
 		}
+		for (auto &t : threads)
+			t.join();
+
+//		// *** OPENMP ***
+//#pragma omp parallel for num_threads(4) private(y, r) schedule(dynamic)
+//		for (y = 0; y < dimension; ++y)
+//		{
+//			for (size_t x = 0; x < dimension; ++x)
+//			{
+//				for (size_t sy = 0, i = (dimension - y - 1) * dimension + x; sy < 2; ++sy)
+//				{
+//					for (size_t sx = 0; sx < 2; ++sx)
+//					{
+//						r = vec();
+//						for (size_t s = 0; s < samples; ++s)
+//						{
+//							double r1 = 2 * get_random_number(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
+//							double r2 = 2 * get_random_number(), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
+//							vec direction = cx * static_cast<double>(((sx + 0.5 + dx) / 2 + x) / dimension - 0.5) + cy * static_cast<double>(((sy + 0.5 + dy) / 2 + y) / dimension - 0.5) + camera.direction;
+//							r = r + radiance(spheres, ray(camera.origin + direction * 140, direction.normal()), 0) * (1.0 / samples);
+//						}
+//						pixels[i] = pixels[i] + vec(clamp(r.x, 0.0, 1.0), clamp(r.y, 0.0, 1.0), clamp(r.z, 0.0, 1.0)) * 0.25;
+//					}
+//				}
+//			}
+//		}
 
 		// * ...TO HERE *
 		auto end = system_clock::now();
@@ -408,7 +408,7 @@ int main(int argc, char **argv)
 		results << j + 1 << ", " << dimension << ", " << samples * 4 << ", " << total << endl;
 		cout << "Test " << j + 1 << " complete. Time = " << total << "." <<  num_threads << endl;
 		array2bmp("img.bmp", pixels, dimension, dimension);
-		//pixels.clear();
+		pixels.clear();
 	}
 
 	return 0;
