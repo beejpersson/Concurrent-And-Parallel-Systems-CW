@@ -1,4 +1,4 @@
-	\documentclass[journal,transmag]{IEEEtran}
+\documentclass[journal,transmag]{IEEEtran}
 
 \usepackage{cite}
 \usepackage[pdftex]{graphicx}
@@ -111,7 +111,6 @@
 	\subsection{Parallelisation Techniques}
 	After these benchmarks for the sequential algorithm were recorded, a few different parallelising techniques were applied to the algorithm and some preliminary tests were run. The intention here was to ensure that the techniques had been implemented correctly and to gain an idea of their relative performance. The techniques used were manual multi-threading and OpenMP with both static and dynamic scheduling.\\
 	
-	
 	\subsubsection{Manual Multi-Threading}
 	To parallelise the algorithm using manual multi-threading the set of for loops seen in Listing 1 were added to a single method which could then be run on multiple threads, as shown in Listing 2.
 	
@@ -127,78 +126,155 @@
 	\subsection{Testing}
 	The same series of tests that were run on the sequential algorithm were then undertaken for each implemented parallelisation. These tests were done under the same conditions and on the same hardware to eliminate discrepancies. The testing parameters used to evaluate the performance of the algorithms is outlined below.
 	
-	The dependent variable being measured was the amount of time it took for the algorithms to produce all the data in the pixel vector, which is used to generate the final image. The independent variables were the dimensions of the image and the number of samples per pixel. First the image size was kept constant at 256x256 whilst the number of samples per pixel was incremented, by powers of 2, from 4 up to 512. After this the samples per pixel was kept constant at 16 whilst the dimensions of the image were incremented, again by powers of 2, from 128x128 up to 1024x1024. For each change in the independent variables, 100 tests were run and the time it took for the algorithm to produce the data recorded, before the average run times were calculated. Further to this, 2 tests were run with a large image size of 1024x1024 and 1024 samples per pixel. This was only done twice due to how long it took for the sequential algorithm to generate the image, but was still useful for comparison. Further to this, a few additional tests were done on each parallel algorithm where the number of threads they ran on were controlled. This was done to help contextualise whether the potential performance increase came from the number of additional threads or from changes to the algorithm itself.
+	For the majority of the tests, the algorithms were run on the maximum number of threads available (the test hardware allowed up to 8). The dependent variable being measured was the amount of time it took for the algorithms to produce all the data in the pixel vector, which is used to generate the final image. The independent variables were the dimensions of the image, the number of samples per pixel. First the image size was kept constant at 256x256 whilst the number of samples per pixel was incremented, by powers of 2, from 4 up to 512. After this the samples per pixel was kept constant at 16 whilst the dimensions of the image were incremented, again by powers of 2, from 128x128 up to 1024x1024. For each change in the independent variables, 100 tests were run and the time it took for the algorithm to produce the data recorded, before the average run times were calculated. Further to this, 2 tests were run with a large image size of 1024x1024 and 1024 samples per pixel. This was only done twice due to how long it took for the sequential algorithm to generate the image, but was still useful for comparison. Additionally a few tests were done on each parallel algorithm where the number of threads they ran on were controlled. This was done to help contextualise whether the potential performance increase came from the number of additional threads or from changes to the algorithm itself.
 	
 	\subsection{Evaluation}
 	The results of these tests were then collated and compared to the results from the sequential algorithm's testing and used as the basis for the evaluation of	their respective performance.
 	
-	To represent the improved performance, the efficiency, $E$, of the algorithms was calculated using the formula shown in Equation \ref{efficiency} below:
+	To represent the improved performance, the efficiency, $E$, of the algorithms was calculated using the formula shown in Equation \ref{efficiencyeq} below:
 	
-	\begin{equation} \label{efficiency} 
+	\begin{equation} \label{efficiencyeq} 
 	E = \dfrac{S}{p} = \dfrac{(\dfrac{T_{serial}}{T_{parallel}})}{p}
 	\end{equation}
 	
-	Where $S$ is speedup, $p$ is the number of processor cores, and $T_{serial}$ and $T_{parallel}$ are the sequential and parallel computational times respectively.
+	Where $S$ is speedup, $p$ is the number of processor cores (the test hardware had 4), and $T_{serial}$ and $T_{parallel}$ are the sequential and parallel computational times respectively.
 	
 	\section{Results and Discussion}
-	The results from the testing done on the algorithms can be seen summarised in tables \ref{comptable1} below. As discussed in the initial analysis there is an almost perfect positive correlation between the average time and the increasing samples per pixel and image dimensions for the sequential algorithm, but this also holds true for parallel algorithms.
+	The results from the performance testing done on the algorithms can be seen summarised in tables \ref{comptable1} and \ref{comptable2} below. As discussed in the initial analysis there is an almost perfect positive correlation between the average time and the increasing samples per pixel and image dimensions for the sequential algorithm, but this also holds true for parallel algorithms. However, the times in which the parallel algorithms produced the data were much lower than the sequential algorithm, even at extreme values (Table \ref{comptable3}).
+	
+	Table \ref{comptable1} and its accompanying graph (Figure \ref{graph1}) comparing the average time taken for the algorithms to generate the data required to produce a 256x256 image at different numbers of samples per pixel are shown below.
 	
 	\begin{table}[!h]
 		\caption{256x256 Image Generation Performance Comparison}
 		\label{comptable1}
 		\centering
 		\resizebox{\columnwidth}{!}{%
-		\begin{tabular}{@{}ccccc@{}}
-			\toprule
-			\multicolumn{5}{c}{Image Dimensions 256x256} \\ \midrule
-			\multicolumn{1}{c|}{Algorithm} & \multicolumn{1}{c}{Sequential} & \multicolumn{1}{c}{OpenMP Static} & \multicolumn{1}{c}{OpenMP Dynamic} & \multicolumn{1}{c}{Manual Multi-Threading} \\ \midrule
-			\multicolumn{1}{c|}{Samples Per Pixel} & \multicolumn{4}{c}{Average Time / ms} \\ \midrule
-			\multicolumn{1}{c|}{4} & 1.0 & \multicolumn{1}{c|}{1.0} & 1.7 & 0.989 \\
-			\multicolumn{1}{c|}{8} & 1.0 & \multicolumn{1}{c|}{1.0} & 2.5 & 0.920 \\
-			\multicolumn{1}{c|}{16} & 1.0 & \multicolumn{1}{c|}{1.0} & 3.5 & 0.919 \\
-			\multicolumn{1}{c|}{32} & 1.0 & \multicolumn{1}{c|}{1.0} & 3.4 & 0.901 \\
-			\multicolumn{1}{c|}{64} & 1.0 & \multicolumn{1}{c|}{1.0} & 25.5 & 0.962 \\
-			\multicolumn{1}{c|}{128} & 1.0 & \multicolumn{1}{c|}{1.0} & 82.9 & 0.949 \\
-			\multicolumn{1}{c|}{256} & 1.0 & \multicolumn{1}{c|}{1.0} & 183.6 & 0.968 \\
-			\multicolumn{1}{c|}{512} & 1.0 & \multicolumn{1}{c|}{1.0} & 335.1 & 0.968 \\ \bottomrule
-		\end{tabular}%
+			\begin{tabular}{@{}ccccc@{}}
+				\toprule
+				\multicolumn{5}{c}{Image Dimensions = 256x256} \\ \midrule
+				\multicolumn{1}{c|}{Algorithm} & \multicolumn{1}{c}{Sequential} & \multicolumn{1}{c}{OMP Static} & \multicolumn{1}{c}{OMP Dynamic} & \multicolumn{1}{c}{Manual} \\ \midrule
+				\multicolumn{1}{c|}{SamplesPerPixel} & \multicolumn{4}{c}{Average Time / ms} \\ \midrule
+				\multicolumn{1}{c|}{4} & 762.57 & 187.13 & 163.98 & 168.87 \\
+				\multicolumn{1}{c|}{8} & 1536.27 & 372.96 & 328.74 & 333.76 \\
+				\multicolumn{1}{c|}{16} & 3059.91 & 728.10 & 655.39 &649.57 \\
+				\multicolumn{1}{c|}{32} & 6223.33 & 1427.95 & 1308.69 & 1283.35 \\
+				\multicolumn{1}{c|}{64} & 12510.68 & 2804.45 & 2625.94 & 2570.45 \\
+				\multicolumn{1}{c|}{128} & 24544.85 & 5589.91 & 5206.20 & 5100.70 \\
+				\multicolumn{1}{c|}{256} & 48129.36 & 11119.07 & 10354.04 & 10108.84 \\
+				\multicolumn{1}{c|}{512} & 95256.72 & 22138.99 & 20634.72 & 20348.64 \\ \bottomrule
+			\end{tabular}%
 		}
 	\end{table}
-	
-	A graph comparing the average time taken for the algorithms to generate the data required to produce a 256x256 image at different numbers of samples per pixel is shown below in Figure \ref{fig1}.
 	
 	\begin{figure}[!h]
 		\centering
 		\includegraphics[width=\columnwidth]{IMAGES/performancecomparison1}
 		\caption{A graph showing the average time it took each algorithm to generate a 256x256 image at different numbers of samples per pixel.}
-		\label{fig1}
+		\label{graph1}
 	\end{figure}
 	
-	As the number of samples per pixel were incremented in powers of 2, the data is discrete and the $x$-axis has been displayed using a base-2 logarithmic scale. As a result of this the $y$-axis is also displayed using a base-2 logarithmic scale so that data does not appear skewed. Here we can see that all the parallel algorithms show significant speed up over the sequential algorithm, with the manual multi-threading being the fastest.
+	As the number of samples per pixel were incremented in powers of 2, the data is discrete and the $x$-axis has been displayed using a base-2 logarithmic scale. As a result of this the $y$-axis is also displayed using a base-2 logarithmic scale so that data does not appear skewed. Here we can see that all the parallel algorithms show significant speedup over the sequential algorithm, with the manual multi-threading often being the fastest, if only by a small margin.
+	
+	The results of the next tests are shown in Table \ref{comptable2}. This table shows the average time it took the algorithms to produce the data for images of varying sizes at 16 samples per pixel. This data is visualised in Figure \ref{graph2} below.
 
+	\begin{table}[!h]
+		\caption{16 Spp Image Generation Performance Comparison}
+		\label{comptable2}
+		\centering
+		\resizebox{\columnwidth}{!}{%
+			\begin{tabular}{@{}ccccc@{}}
+				\toprule
+				\multicolumn{5}{c}{Samples Per Pixel = 16} \\ \midrule
+				\multicolumn{1}{c|}{Algorithm} & \multicolumn{1}{c}{Sequential} & \multicolumn{1}{c}{OMP Static} & \multicolumn{1}{c}{OMP Dynamic} & \multicolumn{1}{c}{Manual} \\ \midrule
+				\multicolumn{1}{c|}{Image Dimensions} & \multicolumn{4}{c}{Average Time / ms} \\ \midrule
+				\multicolumn{1}{c|}{128} & 746.34 & 187.23 & 165.81 & 168.42 \\
+				\multicolumn{1}{c|}{256} & 3012.15 & 728.84 & 654.27 & 645.84 \\
+				\multicolumn{1}{c|}{512} & 11881.24 & 2817.64 & 2582.84 & 2581.12 \\
+				\multicolumn{1}{c|}{1024} & 47855.70 & 11098.78 & 10282.72 & 10190.96 \\ \bottomrule
+			\end{tabular}%
+		}
+	\end{table}
 	
 	\begin{figure}[!h]
 		\centering
 		\includegraphics[width=\columnwidth]{IMAGES/performancecomparison2}
 		\caption{A graph showing the average time it took each algorithm to generate images of varying dimensions at 16 samples per pixel.}
-		\label{fig2}
+		\label{graph2}
 	\end{figure}
 
+	Once again, the dimensions used for the size of the image were incremented in powers of 2, resulting in a similarly scaled $x$- and $y$-axis, as before. The data from these tests are in line with the previous results. Again it can be seen that the parallel algorithms outperform the sequential algorithm.
+	
+	There were also a smaller number of tests done at extreme values to compare the algorithm's performances when generating large, high detail images. This is shown in Table \ref{comptable3} below. The data was in agreement with the rest and showed that even at the extreme end the parallelised algorithms generated the images much faster.
+	
+	\begin{table}[!h]
+		\caption{Extreme Spp and Image Size Performance Comparison}
+		\label{comptable3}
+		\centering
+		\resizebox{\columnwidth}{!}{%
+			\begin{tabular}{@{}ccccc@{}}
+				\toprule
+				\multicolumn{5}{c}{Image Dimensions = 1024, Samples Per Pixel = 1024} \\ \midrule
+				\multicolumn{1}{c|}{Algorithm} & \multicolumn{1}{c}{Sequential} & \multicolumn{1}{c}{OMP Static} & \multicolumn{1}{c}{OMP Dynamic} & \multicolumn{1}{c}{Manual} \\ \midrule
+				\multicolumn{1}{c|}{Test No.} & \multicolumn{4}{c}{Time / ms} \\ \midrule
+				\multicolumn{1}{c|}{1} & 3002631 & 709916 & 659067 & 651456 \\
+				\multicolumn{1}{c|}{2} & 3001927 & 708573 & 658709 & 647313 \\ \bottomrule
+			\end{tabular}%
+		}
+	\end{table}
+	
+	By running these averaged times through the formula shown in Equation \ref{efficiencyeq}, the efficiency of these algorithms compared against the sequential algorithm was calculated. The below table (Table \ref{efficiencytable}) shows these efficiencies for the first set of test results.
+
+	\begin{table}[!h]
+		\caption{Algorithmic Efficiency Comparison}
+		\label{efficiencytable}
+		\centering
+		\resizebox{\columnwidth}{!}{%
+			\begin{tabular}{@{}cccc@{}}
+				\toprule
+				\multicolumn{4}{c}{Samples Per Pixel = 16} \\ \midrule
+				\multicolumn{1}{c|}{Algorithm} & \multicolumn{1}{c}{OMP Static} & \multicolumn{1}{c}{OMP Dynamic} & \multicolumn{1}{c}{Manual} \\ \midrule
+				\multicolumn{1}{c|}{Image Dimensions} & \multicolumn{3}{c}{Efficiency} \\ \midrule
+				\multicolumn{1}{c|}{128} & 0.997 & 1.125 & 1.108 \\
+				\multicolumn{1}{c|}{256} & 1.033 & 1.151 & 1.166 \\
+				\multicolumn{1}{c|}{512} & 1.054 & 1.150 & 1.151 \\
+				\multicolumn{1}{c|}{1024} & 1.078 & 1.163 & 1.174 \\ \bottomrule
+			\end{tabular}%
+		}
+	\end{table}
+
+	This table shows that some of the algorithms tested had efficiency ratings of more than 1, implying that they ran faster per thread than the sequential algorithm. As stated in the methodology, a few additional tests were done on the parallel algorithms where the number of threads they ran on was controlled. This allowed for a comparison to be made between each algorithm's single threaded performance in order to better contextualise the efficiency ratings of more than 1. Below are two graphs (Figures \ref{graph3} and \ref{graph4}) which show some of the results from these tests.
 
 	\begin{figure}[!h]
 		\centering
 		\includegraphics[width=\columnwidth]{IMAGES/singlethreadperformance}
 		\caption{A graph showing the average time it took each algorithm to generate a 256x256 image at 16 samples per pixel whilst limited to a single thread.}
-		\label{fig3}
+		\label{graph3}
 	\end{figure}
 
-	Suitable performance analysis and testing documentation
-	for the problem, including quality of presentation of
-	the results. [10]
+	Even when ran on a single thread the parallel algorithms generated the required data in less time than the sequential algorithm. In particular, the attempt at manual multi-threading produced significantly faster results. Therefore there were some incidental optimisations of the sequential algorithm when it was parallelised.
+
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=\columnwidth]{IMAGES/threadcomparison}
+		\caption{A graph showing the average time it took each algorithm to generate a 256x256 image at 16 samples per pixel on both 4 and 8 threads.}
+		\label{graph4}
+	\end{figure}
+
+	Further to this, Figure \ref{graph4} shows that there was significant speedup for all the parallelised algorithms when ran on 8 threads instead of 4. The hardware used had 4 cores but allowed for hyper-threading to 8 threads and was potentially a reason for why the efficiencies of more than 1 arose.
 	
 	\section{Conclusion}
 	Level of discussion and appropriateness of the conclusions
 	drawn based on the results gathered. [10]
+	
+	\subsection{Explanation of Results and Evaluation of Performance}
+	Across all the tested algorithms, when either the dimensions of the image or the number of samples per pixel were increased, the time it took to produce the data in the pixel vector used to generate the image would increase with near perfect positive correlation. Furthermore, as shown in Figures \ref{graph1} and \ref{graph2}, independent of whether the image dimensions or the samples per pixels were changed, each of the parallelised algorithms significantly outperformed the sequential algorithm. Compared against each other, OpenMP with static scheduling was always outperformed by both OpenMP with dynamic scheduling	 and the manually multi-threaded algorithm. The manually multi-threading algorithm was generally equal to, or very slightly faster than OpenMP with dynamic scheduling.
+	
+	Each of the parallelised algorithms had a speedup of 4 or more when compared to the sequential algorithm, and efficiency ratings more than 1. The reasons that the algorithm's efficiency ratings were able to be higher than 1 are likely twofold. Firstly, as shown in Figure \ref{graph3}, the parallelised algorithms were able to generate images quicker than the sequential algorithm even when operating on a single thread. This shows that there were optimisations implemented when parallelising the algorithm, this is especially true for the manually multi-threaded algorithm. Secondly, as shown in Figure \ref{graph4}, there was noticeable speedup from all the algorithms when going from running on 4 threads to running on 8. Given that there were only 4 physical cores and that the equation used to calculate efficiency uses this, a significant proportion of the speedup of the parallelised algorithms is due to the hyper-threading done by the CPU. 
+	
+	Combined, these two effects make a significant effect on the parallelised algorithm's efficiency ratings. Whilst both parallel algorithms that used OpenMP were only very slightly faster on a single thread than the sequential algorithm, the manually multi-threaded algorithm had a speedup of 1.42 whilst still operating on a single thread. This shows that the performance gained by manually multi-threading the algorithm had much less to do with running the algorithm over multiple threads than the performance gained by the OpenMP parallelised algorithms. The speedup from the hyper-threading, however was more even across the parallelised algorithms.
+	
+	\subsection{Final Thoughts}
+	The provided sequential algorithm originally took a considerable amount of time to produce large images of quality. The attempts at parallelising the algorithm were largely successful.
 	
 	\newpage
 	
