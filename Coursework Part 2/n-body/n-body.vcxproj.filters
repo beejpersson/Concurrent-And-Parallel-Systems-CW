@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="raytracer.cpp">
+    <ClCompile Include="n-body sequential.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
