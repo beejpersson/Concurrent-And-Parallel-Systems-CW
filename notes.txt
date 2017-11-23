@@ -1,4 +1,4 @@
-CW1 Notes
+https://gist.github.com/MarkCLewis/e1bf5fca8394916231cdc0ccbecdefc3CW1 Notes
 
 Testing notes:
  - speedup
@@ -19,3 +19,11 @@ Do more parallel methods, determine best speed up, more tests with that one
 CW2 Notes
 
 n-body problem
+
+Main code body
+MarkCLewis
+https://gist.github.com/MarkCLewis/e1bf5fca8394916231cdc0ccbecdefc3
+
+Possible force calcs
+MarkHarris
+https://github.com/harrism/mini-nbody/blob/master/nbody.c
