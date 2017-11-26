@@ -42,7 +42,7 @@ def main():
         for body in rdata.data[renderIdx % renderLen]:
             filledCircleRGBA(
                 renderer,
-                body[0]+400, body[1]+400, body[2],
+                body[0], body[1], body[2],
                 255,0,255, 255
             )
         SDL_RenderPresent(renderer)

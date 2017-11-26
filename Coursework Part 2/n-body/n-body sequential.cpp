@@ -9,7 +9,7 @@
 
 
 // Small value to avoid dividing by zero in force calculation
-#define SOFTENING 1e-9f
+#define SOFTENING 1e-4f
 // Gravitational constant
 #define GRAV_CONST 6.67408e-11f
 
@@ -170,7 +170,7 @@ private:
 			bodies[i].v.x = 0.0;
 			bodies[i].v.y = 0.0;
 			bodies[i].v.z = 0.0;
-			bodies[i].mass = 1.0;
+            bodies[i].mass = 10.0f * (rand() / (float)RAND_MAX);
 		}
 	}
 
@@ -189,7 +189,6 @@ public:
 			fprintf(stderr, "Couldn't open render.json");
 		}
 		fprintf(rdata, "data = [\n");
-
 		for (int step = 0; step < steps; ++step) {
 			for (int i = 0; i < numBodies; ++i) {
 				accel[i].zero();
@@ -201,12 +200,12 @@ public:
 					float dx = pi.p.x - pj.p.x;
 					float dy = pi.p.y - pj.p.y;
 					float dz = pi.p.z - pj.p.z;
-					float dist = sqrt(dx*dx + dy*dy + dz*dz + SOFTENING);
-					float magi = pj.mass / (dist*dist*dist);
+					float dist = sqrt(dx*dx + dy*dy + dz*dz);
+					float magi = pj.mass / (dist*dist*dist + SOFTENING);
 					accel[i].x -= magi*dx;
 					accel[i].y -= magi*dy;
 					accel[i].z -= magi*dz;
-					float magj = pi.mass / (dist*dist*dist);
+					float magj = pi.mass / (dist*dist*dist + SOFTENING);
 					accel[j].x += magj*dx;
 					accel[j].y += magj*dy;
 					accel[j].z += magj*dz;
@@ -217,8 +216,8 @@ public:
 					double dy = pj.p.y - pi.p.y;
 					double dz = pj.p.z - pi.p.z;
 
-					double distSqr = dx*dx + dy*dy + dz*dz + SOFTENING;
-					double invDist = 1.0f / sqrt(distSqr);
+					double distSqr = dx*dx + dy*dy + dz*dz;
+					double invDist = 1.0f / (sqrt(distSqr)+SOFTENING);
 					double invDist3 = invDist * invDist * invDist;
 
 					accel[i].x += dx * invDist3; accel[i].y += dy * invDist3; accel[i].z += dz * invDist3;*/
@@ -236,7 +235,10 @@ public:
 				p.p.x += p.v.x*dt;
 				p.p.y += p.v.y*dt;
 				p.p.z += p.v.z*dt;
-				fprintf(rdata, "[%f, %f, %f],", p.p.x, p.p.y, p.p.z);
+                int x = ((p.p.x * 0.5f) + 0.5) * 800;
+                int y = ((p.p.y * 0.5f) + 0.5) * 800;
+                int r = 4;
+				fprintf(rdata, "[%d, %d, %d],", x, y, r);
 				
 				fprintf(stderr, "Finished iterations %d.\n", i);
 			}
@@ -251,14 +253,14 @@ public:
 int main(int argc, char *argv[]) {
 	using namespace std::chrono;
 
-	NBodyMutableClass sim(20, 0.01f);
+	NBodyMutableClass sim(50, 0.001f);
 
 	results << "Body, Pos x, Pos y, Pos z, , Vel x, Vel y, Vel z" << endl;
 	//results << "Accel[i] x, y, z, , Accel[j] x, y, z" << endl;
 
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	sim.forSim(5);
+	sim.forSim(1000);
 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
