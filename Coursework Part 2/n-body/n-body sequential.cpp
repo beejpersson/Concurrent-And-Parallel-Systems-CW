@@ -149,12 +149,12 @@ int main(int argc, char *argv[]) {
     ofstream results("data.csv", ofstream::out);
 
     // *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-    int numBodies = 100; // number of bodies
+    int numBodies = 800; // number of bodies
     int nIters = 1000; // simulation iterations
     float timeStep = 0.0002f; // time step
 
     // Output headers to results file
-    results << "Test, Number of Bodies, Steps, Time, " << endl;
+    results << "Test, Number of Bodies, Simulation Iterations, Time, " << endl;
 
     // Run test iterations
     for (int i = 0; i < 10; ++i) {
@@ -179,34 +179,34 @@ int main(int argc, char *argv[]) {
             // Apply those forces and update the bodies positions
             sim.addForces();
 
-            // ** Print positions of all bodies each step, for simulation renderer **
-            fprintf(rdata, "\t[");
-            for (int j = 0; j < sim.get_bodies().size(); ++j) {
-                // Convert body positions to an int proportional to screen size to be sent to data file
-                int x = ((sim.get_bodies()[j].p.x * 0.5f) + 0.5f) * 800.0f;
-                int y = ((sim.get_bodies()[j].p.y * 0.5f) + 0.5f) * 800.0f;
-                // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
-                int r = sqrt(sim.get_bodies()[j].mass / M_PI);
-                fprintf(rdata, "[%d, %d, %d],", x, y, r);
-            }
+            //// ** Print positions of all bodies each step, for simulation renderer **
+            //fprintf(rdata, "\t[");
+            //for (int j = 0; j < sim.get_bodies().size(); ++j) {
+            //    // Convert body positions to an int proportional to screen size to be sent to data file
+            //    int x = ((sim.get_bodies()[j].p.x * 0.5f) + 0.5f) * 800.0f;
+            //    int y = ((sim.get_bodies()[j].p.y * 0.5f) + 0.5f) * 800.0f;
+            //    // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
+            //    int r = sqrt(sim.get_bodies()[j].mass / M_PI);
+            //    fprintf(rdata, "[%d, %d, %d],", x, y, r);
+            //}
 
-            //fprintf(stderr, "Finished iterations %d.\n", step);
-            fprintf(rdata, "],\n");
-            // ** Print positions of all bodies each step, for simulation renderer **
+            ////fprintf(stderr, "Finished iterations %d.\n", step);
+            //fprintf(rdata, "],\n");
+            //// ** Print positions of all bodies each step, for simulation renderer **
 
         }
         // * ...TO HERE *
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
-        duration<float> time_span = duration_cast<duration<float>>(t2 - t1);
+        auto time_span = duration_cast<milliseconds>(t2 - t1).count();
 
         fprintf(rdata, "]");
         fclose(rdata);
 
         // Output test no., variables and total time to results file
-        results << i + 1 << ", " << numBodies << ", " << nIters << ", " << time_span.count() << endl;
+        results << i + 1 << ", " << numBodies << ", " << nIters << ", " << time_span << endl;
 
         // Output test iteration information to consolde outside of the timings to not slow algorithm
-        cout << "Test " << i + 1 << " complete. Time = " << time_span.count() << "." << endl;
+        cout << "Test " << i + 1 << " complete. Time = " << time_span << " milliseconds." << endl;
     }
 	return 0;
 }
