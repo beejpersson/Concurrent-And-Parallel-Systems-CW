@@ -1,17 +1,19 @@
 #include <iostream>
-#include <valarray>
-#include <cmath>
+#include <vector>
+#include <stdlib.h>
+#include <math.h>
 #include <chrono>
 #include <fstream>
 #include <vector>
 #include <stdio.h>
 #include <errno.h>
 
-
 // Small value to avoid dividing by zero in force calculation
 #define SOFTENING 1e-4f
 // Gravitational constant
 #define GRAV_CONST 6.67408e-11f
+// Pi
+# define M_PI 3.14159265358979323846
 
 using namespace std;
 
@@ -39,7 +41,7 @@ struct MutableBody {
 	MVect3 p = { 0.0f,0.0f,0.0f }, v = { 0.0f,0.0f,0.0f };
 	int mass;
 	MutableBody() {}
-	MutableBody(const MVect3 &np, const MVect3 &nv, float m) {
+	MutableBody(const MVect3 &np, const MVect3 &nv, int m) {
 		p = np;
 		v = nv;
 		mass = m;
@@ -51,15 +53,17 @@ class NBodyMutableClass {
 private:
 	int numBodies;
 	float dt;
-	valarray<MutableBody> bodies;
-	valarray<MVect3> accel;
+	vector<MutableBody> bodies;
+	vector<MVect3> accel;
 
+	// Set initial values of the bodies: positions: a random number between -1 and 1, velocities: 0, mass: between 0 and 1000.
 	void initBodies() {
 		bodies.resize(numBodies);
 		accel.resize(numBodies);
 		bodies[0].p = MVect3(0, 0, 0);
 		bodies[0].v = MVect3(0, 0, 0);
-		bodies[0].mass = 1.0;
+		bodies[0].mass = 1;
+		
 		for (int i = 1; i < numBodies; ++i) {
 			bodies[i].p.x = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
 			bodies[i].p.y = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
@@ -67,7 +71,7 @@ private:
 			bodies[i].v.x = 0.0;
 			bodies[i].v.y = 0.0;
 			bodies[i].v.z = 0.0;
-            bodies[i].mass = rand() % 10 + 1;
+            bodies[i].mass = rand() % 1000 + 1;
 		}
 	}
 
@@ -76,6 +80,10 @@ public:
 		numBodies = nb;
 		dt = step;
 		initBodies();
+	}
+
+	vector<MutableBody> get_bodies() {
+		return bodies;
 	}
 
 	void forSim(int steps) {
@@ -99,7 +107,7 @@ public:
 					float dx = pi.p.x - pj.p.x;
 					float dy = pi.p.y - pj.p.y;
 					float dz = pi.p.z - pj.p.z;
-					float dist = sqrt(dx*dx + dy*dy + dz*dz);
+					float dist = sqrtf(dx*dx + dy*dy + dz*dz);
 					float magi = pj.mass / (dist*dist*dist + SOFTENING);
 					accel[i].x -= magi*dx;
 					accel[i].y -= magi*dy;
@@ -134,11 +142,13 @@ public:
 				p.p.x += p.v.x*dt;
 				p.p.y += p.v.y*dt;
 				p.p.z += p.v.z*dt;
-                // Convert body positions to an int between 0 and 800 to be sent to data file
-                int x = ((p.p.x * 0.5f) + 0.5) * 800;
-                int y = ((p.p.y * 0.5f) + 0.5) * 800;
-                int r = p.mass / 2;
+                // Convert body positions to an int to be sent to data file
+				int x = ((p.p.x * 0.5f) + 0.5f) * 1000.0f;
+				int y = ((p.p.y * 0.5f) + 0.5f) * 1000.0f;
+				// Calculate radius from mass (assuming equal densities of 1) to be send to data file
+				int r = cbrt(3 * (p.mass / (4 * M_PI)));
 				fprintf(rdata, "[%d, %d, %d],", x, y, r);
+				
 				
 				fprintf(stderr, "Finished iterations %d.\n", i);
 			}
@@ -159,7 +169,7 @@ int main(int argc, char *argv[]) {
 
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	sim.forSim(1000);
+	sim.forSim(10);
 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
@@ -167,6 +177,7 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "It took me " << time_span.count() << " seconds.\n";
 	results << "\nTotal Time: ," << time_span.count() << endl;
+	results << "\nBody's x Position: ," << sim.get_bodies()[49].p.x << endl;
 
 	return 0;
 }
