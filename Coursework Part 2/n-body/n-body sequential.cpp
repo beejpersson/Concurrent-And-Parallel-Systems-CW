@@ -71,7 +71,7 @@ private:
 			bodies[i].v.x = 0.0;
 			bodies[i].v.y = 0.0;
 			bodies[i].v.z = 0.0;
-            bodies[i].mass = rand() % 1000 + 1;
+            bodies[i].mass = rand() % 100 + 1;
 		}
 	}
 
@@ -108,11 +108,11 @@ public:
 					float dy = pi.p.y - pj.p.y;
 					float dz = pi.p.z - pj.p.z;
 					float dist = sqrtf(dx*dx + dy*dy + dz*dz);
-					float magi = GRAV_CONST*pj.mass / (dist*dist*dist + SOFTENING);
+					float magi = pj.mass / (dist*dist*dist + SOFTENING);
 					accel[i].x -= magi*dx;
 					accel[i].y -= magi*dy;
 					accel[i].z -= magi*dz;
-					float magj = GRAV_CONST*pi.mass / (dist*dist*dist + SOFTENING);
+					float magj = pi.mass / (dist*dist*dist + SOFTENING);
 					accel[j].x += magj*dx;
 					accel[j].y += magj*dy;
 					accel[j].z += magj*dz;
@@ -142,11 +142,11 @@ public:
 				p.p.x += p.v.x*dt;
 				p.p.y += p.v.y*dt;
 				p.p.z += p.v.z*dt;
-                // Convert body positions to an int to be sent to data file
-				int x = ((p.p.x * 0.5f) + 0.5f) * 500.0f;
-				int y = ((p.p.y * 0.5f) + 0.5f) * 500.0f;
+                // Convert body positions to an int proportional to screen size to be sent to data file
+				int x = ((p.p.x * 0.5f) + 0.5f) * 1280.0f;
+				int y = ((p.p.y * 0.5f) + 0.5f) * 720.0f;
 				// Calculate radius from mass (assuming equal densities of 1) to be send to data file
-				int r = cbrt(3 * (p.mass / (4 * M_PI)));
+				int r = sqrt(p.mass/M_PI);
 				fprintf(rdata, "[%d, %d, %d],", x, y, r);
 				
 				
@@ -162,14 +162,14 @@ public:
 int main(int argc, char *argv[]) {
 	using namespace std::chrono;
 
-	NBodyMutableClass sim(50, 0.001f);
+	NBodyMutableClass sim(50, 0.0002f);
 
 	results << "Body, Pos x, Pos y, Pos z, , Vel x, Vel y, Vel z" << endl;
 	//results << "Accel[i] x, y, z, , Accel[j] x, y, z" << endl;
 
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	sim.forSim(200);
+	sim.forSim(1000);
 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
