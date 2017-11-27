@@ -108,11 +108,11 @@ public:
 					float dy = pi.p.y - pj.p.y;
 					float dz = pi.p.z - pj.p.z;
 					float dist = sqrtf(dx*dx + dy*dy + dz*dz);
-					float magi = pj.mass / (dist*dist*dist + SOFTENING);
+					float magi = GRAV_CONST*pj.mass / (dist*dist*dist + SOFTENING);
 					accel[i].x -= magi*dx;
 					accel[i].y -= magi*dy;
 					accel[i].z -= magi*dz;
-					float magj = pi.mass / (dist*dist*dist + SOFTENING);
+					float magj = GRAV_CONST*pi.mass / (dist*dist*dist + SOFTENING);
 					accel[j].x += magj*dx;
 					accel[j].y += magj*dy;
 					accel[j].z += magj*dz;
@@ -143,8 +143,8 @@ public:
 				p.p.y += p.v.y*dt;
 				p.p.z += p.v.z*dt;
                 // Convert body positions to an int to be sent to data file
-				int x = ((p.p.x * 0.5f) + 0.5f) * 1000.0f;
-				int y = ((p.p.y * 0.5f) + 0.5f) * 1000.0f;
+				int x = ((p.p.x * 0.5f) + 0.5f) * 500.0f;
+				int y = ((p.p.y * 0.5f) + 0.5f) * 500.0f;
 				// Calculate radius from mass (assuming equal densities of 1) to be send to data file
 				int r = cbrt(3 * (p.mass / (4 * M_PI)));
 				fprintf(rdata, "[%d, %d, %d],", x, y, r);
@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
 
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	sim.forSim(10);
+	sim.forSim(200);
 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 

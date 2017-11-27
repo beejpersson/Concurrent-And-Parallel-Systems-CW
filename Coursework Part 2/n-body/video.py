@@ -13,7 +13,7 @@ def main():
     window = SDL_CreateWindow(
         b"Hello World",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        1000,1000,
+        500,500,
         SDL_WINDOW_SHOWN
     )
     renderer = SDL_CreateRenderer(
