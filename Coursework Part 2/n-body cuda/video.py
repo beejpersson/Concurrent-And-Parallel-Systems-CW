@@ -11,7 +11,7 @@ def main():
     
     SDL_Init(SDL_INIT_VIDEO)
     window = SDL_CreateWindow(
-        b"Sequential",
+        b"CUDA",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         800,800,
         SDL_WINDOW_SHOWN

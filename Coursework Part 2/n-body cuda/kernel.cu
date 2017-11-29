@@ -1,19 +1,12 @@
-#include <math.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include <curand.h>
-#include <curand_kernel.h>
-#include <device_functions.h>
 #include <iostream>
 #include <vector>
-#include <stdlib.h>
 #include <math.h>
 #include <chrono>
 #include <fstream>
-#include <vector>
-#include <stdio.h>
-#include <errno.h>
+#include <memory>
 
 // Small value to avoid dividing by zero in force calculation
 #define SOFTENING 1e-4f
@@ -22,14 +15,15 @@
 // Pi
 # define M_PI 3.14159265358979323846
 // Block size
-#define BLOCK_SIZE 256
+#define BLOCKS 256
+#define THREADS_PER_BLOCK 512
 
 // Used namespaces
 using namespace std;
 using namespace std::chrono;
 
 // View cuda info
-__global__ void cuda_info()
+void cuda_info()
 {
     // Get cuda device;
     int device;
@@ -48,127 +42,77 @@ __global__ void cuda_info()
 }
 
 // vec3 struct used for body's position and velocity
-struct MVect3 {
-    float x, y, z;
-    MVect3() {}
-    MVect3(float nx, float ny, float nz) {
-        x = nx;
-        y = ny;
-        z = nz;
-    }
-    void zero() {
-        x = 0.0f;
-        y = 0.0f;
-        z = 0.0f;
-    }
-};
+struct Body { float x, y, z, vx, vy, vz, ax, ay, az, mass; };
 
-// Body struct - with position, velocity, mass and constructor
-struct MutableBody {
-    MVect3 p = { 0.0f,0.0f,0.0f }, v = { 0.0f,0.0f,0.0f };
-    int mass;
-    MutableBody() {}
-    MutableBody(const MVect3 &np, const MVect3 &nv, int m) {
-        p = np;
-        v = nv;
-        mass = m;
+void initBodies(Body *p, int n) {
+    for (int i = 0; i < n; ++i) {
+        Body & pi = p[i];
+        pi.x = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
+        pi.y = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
+        pi.z = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
+        pi.vx = 0.0;
+        pi.vy = 0.0;
+        pi.vz = 0.0;
+        pi.mass = rand() % 100 + 1;
     }
-};
+}
 
-// Body class - with initialise method and simulation method
-class NBodyMutableClass {
-private:
-    int numBodies;
-    float dt;
-    vector<MutableBody> bodies;
-    vector<MVect3> accel;
-
-    // Set initial values of the bodies: positions: a random number between -1 and 1, velocities: 0, mass: between 0 and 100.
-    void initBodies() {
-        bodies.resize(numBodies);
-        accel.resize(numBodies);
-        bodies[0].p = MVect3(0, 0, 0);
-        bodies[0].v = MVect3(0, 0, 0);
-        bodies[0].mass = 1;
-        for (int i = 1; i < numBodies; ++i) {
-            bodies[i].p.x = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
-            bodies[i].p.y = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
-            bodies[i].p.z = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
-            bodies[i].v.x = 0.0;
-            bodies[i].v.y = 0.0;
-            bodies[i].v.z = 0.0;
-            bodies[i].mass = rand() % 100 + 1;
+__global__ void calcForces(Body *p, float dt, int n) {
+    int i = (blockDim.x * blockIdx.x) + threadIdx.x;
+    if (i < n) {
+        Body & pi = p[i];
+        pi.ax = 0.0f; pi.ay = 0.0f; pi.az = 0.0f;
+    }
+    if (i < n) {
+        Body & pi = p[i];
+        for (int j = i + 1; j < n; ++j) {
+            Body & pj = p[j];
+            float dx = pi.x - pj.x;
+            float dy = pi.y - pj.y;
+            float dz = pi.z - pj.z;
+            float dist = sqrtf(dx*dx + dy*dy + dz*dz);
+            float magi = pj.mass / (dist*dist*dist + SOFTENING);
+            pi.ax -= magi*dx;
+            pi.ay -= magi*dy;
+            pi.az -= magi*dz;
+            float magj = pi.mass / (dist*dist*dist + SOFTENING);
+            pj.ax += magj*dx;
+            pj.ay += magj*dy;
+            pj.az += magj*dz;
         }
     }
-
-public:
-    NBodyMutableClass(int nb, float step) {
-        numBodies = nb;
-        dt = step;
-        initBodies();
+    /*for (int i = 0; i < n; ++i) {
+        Body & pi = p[i];
+        pi.ax = 0.0f; pi.ay = 0.0f; pi.az = 0.0f;
     }
-
-    vector<MutableBody> get_bodies() {
-        return bodies;
-    }
-
-    vector<MVect3> get_accels() {
-        return accel;
-    }
-
-    void calcForces() {
-        int i = blockDim.x * blockIdx.x + threadIdx.x;
-        if (i < numBodies) {
-            accel[i].zero();
-        }
-        if (i < numBodies) {
-            MutableBody & pi = bodies[i];
-            for (int j = i + 1; j < numBodies; ++j) {
-                MutableBody & pj = bodies[j];
-                float dx = pi.p.x - pj.p.x;
-                float dy = pi.p.y - pj.p.y;
-                float dz = pi.p.z - pj.p.z;
-                float dist = sqrtf(dx*dx + dy*dy + dz*dz);
-                float magi = pj.mass / (dist*dist*dist + SOFTENING);
-                accel[i].x -= magi*dx;
-                accel[i].y -= magi*dy;
-                accel[i].z -= magi*dz;
-                float magj = pi.mass / (dist*dist*dist + SOFTENING);
-                accel[j].x += magj*dx;
-                accel[j].y += magj*dy;
-                accel[j].z += magj*dz;
-
-                //results << i << "," << accel[i].x << "," << accel[i].y << "," << accel[i].z << ", ," << j << "," << accel[j].x << "," << accel[j].y << "," << accel[j].z << endl;
-
-                /*double dx = pj.p.x - pi.p.x;
-                double dy = pj.p.y - pi.p.y;
-                double dz = pj.p.z - pi.p.z;
-
-                double distSqr = dx*dx + dy*dy + dz*dz;
-                double invDist = 1.0f / (sqrt(distSqr)+SOFTENING);
-                double invDist3 = invDist * invDist * invDist;
-
-                accel[i].x += dx * invDist3; accel[i].y += dy * invDist3; accel[i].z += dz * invDist3;*/
-            }
+    for (int i = 0; i < n; ++i) {
+        Body & pi = p[i];
+        for (int j = i + 1; j < n; ++j) {
+            Body & pj = p[j];
+            float dx = pi.x - pj.x;
+            float dy = pi.y - pj.y;
+            float dz = pi.z - pj.z;
+            float dist = sqrtf(dx*dx + dy*dy + dz*dz);
+            float magi = pj.mass / (dist*dist*dist + SOFTENING);
+            pi.ax -= magi*dx;
+            pi.ay -= magi*dy;
+            pi.az -= magi*dz;
+            float magj = pi.mass / (dist*dist*dist + SOFTENING);
+            pj.ax += magj*dx;
+            pj.ay += magj*dy;
+            pj.az += magj*dz;
         }
     }
-
-    void addForces()
-    {
-        for (int i = 0; i < numBodies; ++i) {
-            MutableBody & p = bodies[i];
-            // Before positions updated, print to results file
-            //results << i << "," << p.p.x << "," << p.p.y << "," << p.p.z << ", ," << p.v.x << "," << p.v.y << "," << p.v.z << "," << endl;
-            //results << "Final accel: ," << accel[i].x << "," << accel[i].y << "," << accel[i].z << endl;
-            p.v.x += accel[i].x*dt;
-            p.v.y += accel[i].y*dt;
-            p.v.z += accel[i].z*dt;
-            p.p.x += p.v.x*dt;
-            p.p.y += p.v.y*dt;
-            p.p.z += p.v.z*dt;
-        }
-    }
-};
+    for (int i = 0; i < n; ++i) {
+        Body & pi = p[i];
+        pi.vx += pi.ax*dt;
+        pi.vy += pi.ay*dt;
+        pi.vz += pi.az*dt;
+        pi.x += pi.vx*dt;
+        pi.y += pi.vy*dt;
+        pi.z += pi.vz*dt;
+    }*/
+}
 
 int main(int argc, char *argv[]) {
     // Initialise random seed
@@ -178,18 +122,12 @@ int main(int argc, char *argv[]) {
     ofstream results("data.csv", ofstream::out);
 
     // *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-    int numBodies = 100; // number of bodies
-    int nIters = 100; // simulation iterations
+    int numBodies = 100;// number of bodies
+    int nIters = 1000; // simulation iterations
     float timeStep = 0.0002f; // time step
-
-    // * CUDA mem alloc *
-    float *d_buf;
-    cudaMalloc(&d_buf, numBodies);
 
     // Output headers to results file
     results << "Test, Number of Bodies, Simulation Iterations, Time, " << endl;
-
-    int nBlocks = (numBodies + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
     // Run test iterations
     for (int i = 0; i < 10; ++i) {
@@ -202,36 +140,54 @@ int main(int argc, char *argv[]) {
         }
         fprintf(rdata, "data = [\n");
 
-        // Generate nbody sim, (num. bodies, timestep)
-        NBodyMutableClass sim(*d_buf, timeStep);
+        // Alloc space for host copies of bodies and setup input values
+        int bytes = numBodies * sizeof(Body);
+        float *buf = (float*)malloc(bytes);
+        Body *p = (Body*)buf;
+        // Initialise values for bodies
+        initBodies(p, numBodies);
+
+        // Alloc space for device copies of bodies
+        float *d_buf;
+        cudaMalloc((void **)&d_buf, bytes);
+        Body *d_p = (Body*)d_buf;
+
+        int nBlocks = (numBodies + BLOCKS - 1) / BLOCKS;
 
         // * TIME FROM HERE... *
         high_resolution_clock::time_point t1 = high_resolution_clock::now();
         for (int step = 0; step < nIters; ++step) {
 
-            cudaMemcpy(d_buf, &numBodies, (sizeof(float) * numBodies), cudaMemcpyHostToDevice);
-            sim.calcForces();
+            //Copy memory from host to device
+            cudaMemcpy(d_buf, buf, bytes, cudaMemcpyHostToDevice);
+
             // Calculate forces applied to the bodies by each other
-            cudaMemcpy(&numBodies, d_buf, (sizeof(float) * numBodies), cudaMemcpyHostToDevice);
-            // Apply those forces and update the bodies positions
-            sim.addForces();
+            calcForces<<<nBlocks,BLOCKS>>>(d_p, timeStep, numBodies);
 
-            cuda_info<<<nBlocks, threads>>>();
-            cudaDeviceSynchronize();
-            //// ** Print positions of all bodies each step, for simulation renderer **
-            //fprintf(rdata, "\t[");
-            //for (int j = 0; j < sim.get_bodies().size(); ++j) {
-            //    // Convert body positions to an int proportional to screen size to be sent to data file
-            //    int x = ((sim.get_bodies()[j].p.x * 0.5f) + 0.5f) * 800.0f;
-            //    int y = ((sim.get_bodies()[j].p.y * 0.5f) + 0.5f) * 800.0f;
-            //    // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
-            //    int r = sqrt(sim.get_bodies()[j].mass / M_PI);
-            //    fprintf(rdata, "[%d, %d, %d],", x, y, r);
-            //}
+            //Copy memory from device to host
+            cudaMemcpy(buf, d_buf, bytes, cudaMemcpyDeviceToHost);
 
-            ////fprintf(stderr, "Finished iterations %d.\n", step);
-            //fprintf(rdata, "],\n");
-            //// ** Print positions of all bodies each step, for simulation renderer **
+            // ** Print positions of all bodies each step, for simulation renderer **
+            fprintf(rdata, "\t[");
+            for (int j = 0; j < numBodies; ++j) {
+                    Body & pj = p[j];
+                    pj.vx += pj.ax*timeStep;
+                    pj.vy += pj.ay*timeStep;
+                    pj.vz += pj.az*timeStep;
+                    pj.x += pj.vx*timeStep;
+                    pj.y += pj.vy*timeStep;
+                    pj.z += pj.vz*timeStep;
+                // Convert body positions to an int proportional to screen size to be sent to data file
+                int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
+                int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
+                // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
+                int r = sqrt(pj.mass / M_PI);
+                fprintf(rdata, "[%d, %d, %d],", x, y, r);
+            }
+
+            //fprintf(stderr, "Finished iterations %d.\n", step);
+            fprintf(rdata, "],\n");
+            // ** Print positions of all bodies each step, for simulation renderer **
 
         }
         // * ...TO HERE *
@@ -246,6 +202,10 @@ int main(int argc, char *argv[]) {
 
         // Output test iteration information to consolde outside of the timings to not slow algorithm
         cout << "Test " << i + 1 << " complete. Time = " << time_span << " milliseconds." << endl;
+
+        // Cleanup
+        free(buf);
+        cudaFree(d_buf);
     }
     return 0;
 }

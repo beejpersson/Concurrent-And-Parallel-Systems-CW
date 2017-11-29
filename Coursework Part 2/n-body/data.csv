@@ -1,2 +1,4 @@
 Test, Number of Bodies, Simulation Iterations, Time, 
-1, 200, 1000, 2854
+1, 100, 1000, 525
+2, 100, 1000, 508
+3, 100, 1000, 521
