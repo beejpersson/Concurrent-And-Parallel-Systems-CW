@@ -36,6 +36,7 @@ void calcForces(Body *p, int n) {
         Body & pi = p[i];
         pi.ax = 0.0f; pi.ay = 0.0f; pi.az = 0.0f;
     }
+#pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         Body & pi = p[i];
         for (int j = i + 1; j < n; ++j) {

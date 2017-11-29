@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "n-body", "n-body\n-body.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "n-body cuda", "n-body cuda\n-body cuda.vcxproj", "{AE143CD9-CE62-41CC-9EBB-83A556C64853}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "n-body omp", "n-body omp\n-body omp.vcxproj", "{A4608292-FC5D-47D5-8A59-C6D215346D55}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -29,6 +31,14 @@ Global
 		{AE143CD9-CE62-41CC-9EBB-83A556C64853}.Release|x64.ActiveCfg = Release|x64
 		{AE143CD9-CE62-41CC-9EBB-83A556C64853}.Release|x64.Build.0 = Release|x64
 		{AE143CD9-CE62-41CC-9EBB-83A556C64853}.Release|x86.ActiveCfg = Release|x64
+		{A4608292-FC5D-47D5-8A59-C6D215346D55}.Debug|x64.ActiveCfg = Debug|x64
+		{A4608292-FC5D-47D5-8A59-C6D215346D55}.Debug|x64.Build.0 = Debug|x64
+		{A4608292-FC5D-47D5-8A59-C6D215346D55}.Debug|x86.ActiveCfg = Debug|Win32
+		{A4608292-FC5D-47D5-8A59-C6D215346D55}.Debug|x86.Build.0 = Debug|Win32
+		{A4608292-FC5D-47D5-8A59-C6D215346D55}.Release|x64.ActiveCfg = Release|x64
+		{A4608292-FC5D-47D5-8A59-C6D215346D55}.Release|x64.Build.0 = Release|x64
+		{A4608292-FC5D-47D5-8A59-C6D215346D55}.Release|x86.ActiveCfg = Release|Win32
+		{A4608292-FC5D-47D5-8A59-C6D215346D55}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

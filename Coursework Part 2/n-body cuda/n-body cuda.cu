@@ -64,6 +64,19 @@ __global__ void calcForces(Body *p, float dt, int n) {
         pi.ax = 0.0f; pi.ay = 0.0f; pi.az = 0.0f;
     }
     if (i < n) {
+        /*float Fx = 0.0f; float Fy = 0.0f; float Fz = 0.0f;
+
+        for (int j = 0; j < n; j++) {
+            float dx = p[j].x - p[i].x;
+            float dy = p[j].y - p[i].y;
+            float dz = p[j].z - p[i].z;
+            float distSqr = dx*dx + dy*dy + dz*dz;
+            float invDist = 1.0f / sqrt(distSqr + SOFTENING);
+            float invDist3 = invDist * invDist * invDist;
+
+            Fx += dx * invDist3; Fy += dy * invDist3; Fz += dz * invDist3;
+        }
+        p[i].vx += dt*Fx; p[i].vy += dt*Fy; p[i].vz += dt*Fz;*/
         Body & pi = p[i];
         for (int j = i + 1; j < n; ++j) {
             Body & pj = p[j];
@@ -167,16 +180,21 @@ int main(int argc, char *argv[]) {
             //Copy memory from device to host
             cudaMemcpy(buf, d_buf, bytes, cudaMemcpyDeviceToHost);
 
+            // Update positions based on calculated forces
+            for (int j = 0; j < numBodies; ++j) {
+                Body & pj = p[j];
+                pj.vx += pj.ax*timeStep;
+                pj.vy += pj.ay*timeStep;
+                pj.vz += pj.az*timeStep;
+                pj.x += pj.vx*timeStep;
+                pj.y += pj.vy*timeStep;
+                pj.z += pj.vz*timeStep;
+            }
+
             // ** Print positions of all bodies each step, for simulation renderer **
             fprintf(rdata, "\t[");
             for (int j = 0; j < numBodies; ++j) {
-                    Body & pj = p[j];
-                    pj.vx += pj.ax*timeStep;
-                    pj.vy += pj.ay*timeStep;
-                    pj.vz += pj.az*timeStep;
-                    pj.x += pj.vx*timeStep;
-                    pj.y += pj.vy*timeStep;
-                    pj.z += pj.vz*timeStep;
+                Body & pj = p[j];
                 // Convert body positions to an int proportional to screen size to be sent to data file
                 int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
                 int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
