@@ -18,24 +18,21 @@ using namespace std::chrono;
 // vec3 struct used for body's position and velocity
 struct Body { float x, y, z, vx, vy, vz, ax, ay, az, mass; };
 
+// Method to initialise values of a body, random position between -1 and 1, 0 velocity and accel, random mass betwen 1 and 100
 void initBodies(Body *p, int n) {
     for (int i = 0; i < n; ++i) {
         Body & pi = p[i];
         pi.x = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
         pi.y = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
         pi.z = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
-        pi.vx = 0.0;
-        pi.vy = 0.0;
-        pi.vz = 0.0;
+        pi.vx = 0.0f; pi.vy = 0.0f; pi.vz = 0.0f;
+        pi.ax = 0.0f; pi.ay = 0.0f; pi.az = 0.0f;
         pi.mass = rand() % 100 + 1;
     }
 }
 
+// Method to calculate the forces acting on each body based on their distances from each other
 void calcForces(Body *p, int n) {
-    for (int i = 0; i < n; ++i) {
-        Body & pi = p[i];
-        pi.ax = 0.0f; pi.ay = 0.0f; pi.az = 0.0f;
-    }
     for (int i = 0; i < n; ++i) {
         Body & pi = p[i];
         for (int j = i + 1; j < n; ++j) {
@@ -72,7 +69,7 @@ int main(int argc, char *argv[]) {
     results << "Test, Number of Bodies, Simulation Iterations, Time, " << endl;
 
     // Run test iterations
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 5; ++i) {
 
         // Create json data file for visualisation
         FILE* rdata;
@@ -97,7 +94,7 @@ int main(int argc, char *argv[]) {
             // Calculate forces applied to the bodies by each other
             calcForces(p, numBodies);
 
-            // Update positions based on calculated forces
+            // Update positions based on calculated forces and reset acceleration
             for (int j = 0; j < numBodies; ++j) {
                 Body & pj = p[j];
                 pj.vx += pj.ax*timeStep;
@@ -106,23 +103,24 @@ int main(int argc, char *argv[]) {
                 pj.x += pj.vx*timeStep;
                 pj.y += pj.vy*timeStep;
                 pj.z += pj.vz*timeStep;
+                pj.ax = 0.0f; pj.ay = 0.0f; pj.az = 0.0f;
             }
 
-            //// ** Print positions of all bodies each step, for simulation renderer **
-            //fprintf(rdata, "\t[");
-            //for (int j = 0; j < numBodies; ++j) {
-            //    Body & pj = p[j];
-            //    // Convert body positions to an int proportional to screen size to be sent to data file
-            //    int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
-            //    int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
-            //    // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
-            //    int r = sqrt(pj.mass / M_PI);
-            //    fprintf(rdata, "[%d, %d, %d],", x, y, r);
-            //}
+            // ** Print positions of all bodies each step, for simulation renderer **
+            fprintf(rdata, "\t[");
+            for (int j = 0; j < numBodies; ++j) {
+                Body & pj = p[j];
+                // Convert body positions to an int proportional to screen size to be sent to data file
+                int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
+                int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
+                // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
+                int r = sqrt(pj.mass / M_PI);
+                fprintf(rdata, "[%d, %d, %d],", x, y, r);
+            }
 
-            ////fprintf(stderr, "Finished iterations %d.\n", step);
-            //fprintf(rdata, "],\n");
-            //// ** Print positions of all bodies each step, for simulation renderer **
+            //fprintf(stderr, "Finished iterations %d.\n", step);
+            fprintf(rdata, "],\n");
+            // ** Print positions of all bodies each step, for simulation renderer **
 
         }
         // * ...TO HERE *

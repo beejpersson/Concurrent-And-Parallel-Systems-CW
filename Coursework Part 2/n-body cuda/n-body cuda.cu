@@ -50,33 +50,15 @@ void initBodies(Body *p, int n) {
         pi.x = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
         pi.y = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
         pi.z = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
-        pi.vx = 0.0;
-        pi.vy = 0.0;
-        pi.vz = 0.0;
+        pi.vx = 0.0f; pi.vy = 0.0f; pi.vz = 0.0f;
+        pi.ax = 0.0f; pi.ay = 0.0f; pi.az = 0.0f;
         pi.mass = rand() % 100 + 1;
     }
 }
 
-__global__ void calcForces(Body *p, float dt, int n) {
+__global__ void calcForces(Body *p, int n) {
     int i = (blockDim.x * blockIdx.x) + threadIdx.x;
     if (i < n) {
-        Body & pi = p[i];
-        pi.ax = 0.0f; pi.ay = 0.0f; pi.az = 0.0f;
-    }
-    if (i < n) {
-        /*float Fx = 0.0f; float Fy = 0.0f; float Fz = 0.0f;
-
-        for (int j = 0; j < n; j++) {
-            float dx = p[j].x - p[i].x;
-            float dy = p[j].y - p[i].y;
-            float dz = p[j].z - p[i].z;
-            float distSqr = dx*dx + dy*dy + dz*dz;
-            float invDist = 1.0f / sqrt(distSqr + SOFTENING);
-            float invDist3 = invDist * invDist * invDist;
-
-            Fx += dx * invDist3; Fy += dy * invDist3; Fz += dz * invDist3;
-        }
-        p[i].vx += dt*Fx; p[i].vy += dt*Fy; p[i].vz += dt*Fz;*/
         Body & pi = p[i];
         for (int j = i + 1; j < n; ++j) {
             Body & pj = p[j];
@@ -129,7 +111,7 @@ __global__ void calcForces(Body *p, float dt, int n) {
 
 int main(int argc, char *argv[]) {
 
-	//cuda_info();
+	cuda_info();
     // Initialise random seed
     srand(time(NULL));
 
@@ -145,7 +127,7 @@ int main(int argc, char *argv[]) {
     results << "Test, Number of Bodies, Simulation Iterations, Time, " << endl;
 
     // Run test iterations
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 5; ++i) {
 
         // Create json data file for visualisation
         FILE* rdata;
@@ -177,7 +159,7 @@ int main(int argc, char *argv[]) {
             cudaMemcpy(d_buf, buf, bytes, cudaMemcpyHostToDevice);
 
             // Calculate forces applied to the bodies by each other
-            calcForces<<<512,4>>>(d_p, timeStep, numBodies);
+            calcForces<<<nBlocks,THREADS_PER_BLOCK>>>(d_p, numBodies);
 
             //Copy memory from device to host
             cudaMemcpy(buf, d_buf, bytes, cudaMemcpyDeviceToHost);
@@ -191,23 +173,24 @@ int main(int argc, char *argv[]) {
                 pj.x += pj.vx*timeStep;
                 pj.y += pj.vy*timeStep;
                 pj.z += pj.vz*timeStep;
+                pj.ax = 0.0f; pj.ay = 0.0f; pj.az = 0.0f;
             }
 
-            //// ** Print positions of all bodies each step, for simulation renderer **
-            //fprintf(rdata, "\t[");
-            //for (int j = 0; j < numBodies; ++j) {
-            //    Body & pj = p[j];
-            //    // Convert body positions to an int proportional to screen size to be sent to data file
-            //    int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
-            //    int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
-            //    // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
-            //    int r = sqrt(pj.mass / M_PI);
-            //    fprintf(rdata, "[%d, %d, %d],", x, y, r);
-            //}
+            // ** Print positions of all bodies each step, for simulation renderer **
+            fprintf(rdata, "\t[");
+            for (int j = 0; j < numBodies; ++j) {
+                Body & pj = p[j];
+                // Convert body positions to an int proportional to screen size to be sent to data file
+                int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
+                int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
+                // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
+                int r = sqrt(pj.mass / M_PI);
+                fprintf(rdata, "[%d, %d, %d],", x, y, r);
+            }
 
-            ////fprintf(stderr, "Finished iterations %d.\n", step);
-            //fprintf(rdata, "],\n");
-            //// ** Print positions of all bodies each step, for simulation renderer **
+            //fprintf(stderr, "Finished iterations %d.\n", step);
+            fprintf(rdata, "],\n");
+            // ** Print positions of all bodies each step, for simulation renderer **
 
         }
         // * ...TO HERE *
