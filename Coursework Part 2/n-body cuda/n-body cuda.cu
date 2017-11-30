@@ -1,6 +1,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include <device_functions.h>
 #include <iostream>
 #include <vector>
 #include <math.h>
@@ -58,22 +59,26 @@ void initBodies(Body *p, int n) {
 
 __global__ void calcForces(Body *p, int n) {
     int i = (blockDim.x * blockIdx.x) + threadIdx.x;
-    if (i < n) {
-        Body & pi = p[i];
-        for (int j = i + 1; j < n; ++j) {
-            Body & pj = p[j];
-            float dx = pi.x - pj.x;
-            float dy = pi.y - pj.y;
-            float dz = pi.z - pj.z;
-            float dist = sqrtf(dx*dx + dy*dy + dz*dz);
-            float magi = pj.mass / (dist*dist*dist + SOFTENING);
-            pi.ax -= magi*dx;
-            pi.ay -= magi*dy;
-            pi.az -= magi*dz;
-            float magj = pi.mass / (dist*dist*dist + SOFTENING);
-            pj.ax += magj*dx;
-            pj.ay += magj*dy;
-            pj.az += magj*dz;
+    int per_thread = max(1, n / (blockDim.x * gridDim.x));
+    int start = i * per_thread;
+    if (start < n) {
+        for (int k = start; k < start + per_thread; ++k) {
+            Body & pi = p[k];
+            for (int j = k + 1; j < n; ++j) {
+                Body & pj = p[j];
+                float dx = pi.x - pj.x;
+                float dy = pi.y - pj.y;
+                float dz = pi.z - pj.z;
+                float dist = sqrtf(dx*dx + dy*dy + dz*dz);
+                float magi = pj.mass / (dist*dist*dist + SOFTENING);
+                pi.ax -= magi*dx;
+                pi.ay -= magi*dy;
+                pi.az -= magi*dz;
+                float magj = pi.mass / (dist*dist*dist + SOFTENING);
+                pj.ax += magj*dx;
+                pj.ay += magj*dy;
+                pj.az += magj*dz;
+            }
         }
     }
     /*for (int i = 0; i < n; ++i) {
@@ -119,8 +124,8 @@ int main(int argc, char *argv[]) {
     ofstream results("data.csv", ofstream::out);
 
     // *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-    int numBodies = 500;// number of bodies
-    int nIters = 1000; // simulation iterations
+    int numBodies = 256;// number of bodies
+    int nIters = 300; // simulation iterations
     float timeStep = 0.0002f; // time step
 
     // Output headers to results file
@@ -159,7 +164,7 @@ int main(int argc, char *argv[]) {
             cudaMemcpy(d_buf, buf, bytes, cudaMemcpyHostToDevice);
 
             // Calculate forces applied to the bodies by each other
-            calcForces<<<nBlocks,THREADS_PER_BLOCK>>>(d_p, numBodies);
+            calcForces<<<1,1>>>(d_p, numBodies);
 
             //Copy memory from device to host
             cudaMemcpy(buf, d_buf, bytes, cudaMemcpyDeviceToHost);
