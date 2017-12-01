@@ -16,8 +16,8 @@
 // Pi
 # define M_PI 3.14159265358979323846
 // Block size
-#define BLOCKS 1
-#define THREADS_PER_BLOCK 4
+#define BLOCKS 256
+#define THREADS_PER_BLOCK 128
 
 // Used namespaces
 using namespace std;
@@ -45,6 +45,7 @@ void cuda_info()
 // vec3 struct used for body's position and velocity
 struct Body { float x, y, z, vx, vy, vz, ax, ay, az, mass; };
 
+// Method to initialise values of a body, random position between -1 and 1, 0 velocity and accel, random mass betwen 1 and 100
 void initBodies(Body *p, int n) {
     for (int i = 0; i < n; ++i) {
         Body & pi = p[i];
@@ -57,6 +58,7 @@ void initBodies(Body *p, int n) {
     }
 }
 
+// Device method to calculate the forces acting on each body based on their distances from each other
 __global__ void calcForces(Body *p, int n) {
     int i = (blockDim.x * blockIdx.x) + threadIdx.x;
     int per_thread = max(1, n / (blockDim.x * gridDim.x));
@@ -79,44 +81,16 @@ __global__ void calcForces(Body *p, int n) {
                 pj.ay += magj*dy;
                 pj.az += magj*dz;
             }
+			__syncthreads();
         }
     }
-    /*for (int i = 0; i < n; ++i) {
-        Body & pi = p[i];
-        pi.ax = 0.0f; pi.ay = 0.0f; pi.az = 0.0f;
-    }
-    for (int i = 0; i < n; ++i) {
-        Body & pi = p[i];
-        for (int j = i + 1; j < n; ++j) {
-            Body & pj = p[j];
-            float dx = pi.x - pj.x;
-            float dy = pi.y - pj.y;
-            float dz = pi.z - pj.z;
-            float dist = sqrtf(dx*dx + dy*dy + dz*dz);
-            float magi = pj.mass / (dist*dist*dist + SOFTENING);
-            pi.ax -= magi*dx;
-            pi.ay -= magi*dy;
-            pi.az -= magi*dz;
-            float magj = pi.mass / (dist*dist*dist + SOFTENING);
-            pj.ax += magj*dx;
-            pj.ay += magj*dy;
-            pj.az += magj*dz;
-        }
-    }
-    for (int i = 0; i < n; ++i) {
-        Body & pi = p[i];
-        pi.vx += pi.ax*dt;
-        pi.vy += pi.ay*dt;
-        pi.vz += pi.az*dt;
-        pi.x += pi.vx*dt;
-        pi.y += pi.vy*dt;
-        pi.z += pi.vz*dt;
-    }*/
 }
 
 int main(int argc, char *argv[]) {
 
-	cuda_info();
+	// Retrieve CUDA information
+	//cuda_info();
+
     // Initialise random seed
     srand(time(NULL));
 
@@ -132,7 +106,7 @@ int main(int argc, char *argv[]) {
     results << "Test, Number of Bodies, Simulation Iterations, Blocks, Threads, Time, " << endl;
 
     // Run test iterations
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 100; ++i) {
 
         // Create json data file for visualisation
         FILE* rdata;
@@ -163,8 +137,8 @@ int main(int argc, char *argv[]) {
             //Copy memory from host to device
             cudaMemcpy(d_buf, buf, bytes, cudaMemcpyHostToDevice);
 
-            // Calculate forces applied to the bodies by each other
-            calcForces<<<BLOCKS,THREADS_PER_BLOCK>>>(d_p, numBodies);
+            // Kernel launch on GPU to calculate forces applied to the bodies by each other
+            calcForces<<<nBlocks,THREADS_PER_BLOCK>>>(d_p, numBodies);
 
             //Copy memory from device to host
             cudaMemcpy(buf, d_buf, bytes, cudaMemcpyDeviceToHost);
