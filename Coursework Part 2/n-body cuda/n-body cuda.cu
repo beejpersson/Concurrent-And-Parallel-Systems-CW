@@ -17,7 +17,7 @@
 # define M_PI 3.14159265358979323846
 // Block size
 #define BLOCKS 256
-#define THREADS_PER_BLOCK 128
+#define THREADS_PER_BLOCK 8
 
 // Used namespaces
 using namespace std;
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
         }
         fprintf(rdata, "data = [\n");
 
-        // Alloc space for host copies of bodies and setup input values
+        // Alloc space for host copies of bodies
         int bytes = numBodies * sizeof(Body);
         float *buf = (float*)malloc(bytes);
         Body *p = (Body*)buf;
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
 
             // Kernel launch on GPU to calculate forces applied to the bodies by each other
             calcForces<<<nBlocks,THREADS_PER_BLOCK>>>(d_p, numBodies);
-
+            
             //Copy memory from device to host
             cudaMemcpy(buf, d_buf, bytes, cudaMemcpyDeviceToHost);
 

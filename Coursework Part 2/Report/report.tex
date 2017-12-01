@@ -1,4 +1,4 @@
-\documentclass[journal,transmag]{IEEEtran}
+\documentclass[12pt,journal,transmag]{IEEEtran}
 
 \usepackage{cite}
 \usepackage[pdftex]{graphicx}
@@ -16,6 +16,9 @@
 \usepackage{lipsum}
 \usepackage{xcolor}
 \usepackage{listings}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\onehalfspacing
 
 
 \lstset{
@@ -49,7 +52,7 @@
 
 \begin{document}
 	
-	\title{SET10108 Concurrent and Parallel Systems\\Report for Coursework Part 1}
+	\title{SET10108 Concurrent and Parallel Systems\\Report for Coursework Part 2}
 	
 	\author{\IEEEauthorblockN{Beej Persson, 40183743@live.napier.ac.uk}
 		\IEEEauthorblockA{School of Computing,
@@ -63,11 +66,11 @@
 	
 	\IEEEtitleabstractindextext{
 		\begin{abstract}
-			For part 1 of the coursework required for the SET10108 Concurrent and Parallel Systems module at Edinburgh Napier University a ray tracing algorithm's performance was to be evaluated and improved by utilising parallel techniques. This report documents one such investigation where the algorithm was parallelised and the difference in its	 performance was measured. 
+			For part 2 of the coursework required for the SET10108 Concurrent and Parallel Systems module at Edinburgh Napier University an n-body simulation algorithm's performance was to be evaluated and improved by utilising parallel techniques. This report documents one such investigation where the algorithm was parallelised and the difference in its performance was measured. 
 		\end{abstract}
 		
 		\begin{IEEEkeywords}
-			parallel, ray tracer, \textsc{OpenMP}, C++11, performance, speedup.
+			parallel, n-body, OpenMP, CUDA, C++11, performance, speedup, efficiency.
 		\end{IEEEkeywords}}
 	
 	\maketitle
@@ -166,12 +169,12 @@
 		}
 	\end{table}
 	
-	\begin{figure}[!h]
+	\begin{figure*}[!h]
 		\centering
-		\includegraphics[width=\columnwidth]{IMAGES/performancecomparison1}
+		\includegraphics[width=\textwidth]{IMAGES/performancecomparison1}
 		\caption{A graph showing the average time it took each algorithm to generate a 256x256 image at different numbers of samples per pixel.}
 		\label{graph1}
-	\end{figure}
+	\end{figure*}
 	
 	As the number of samples per pixel were incremented in powers of 2, the data is discrete and the $x$-axis has been displayed using a base-2 logarithmic scale. As a result of this the $y$-axis is also displayed using a base-2 logarithmic scale so that data does not appear skewed. Here we can see that all the parallel algorithms show significant speedup over the sequential algorithm, with the manual multi-threading often being the fastest, if only by a small margin.
 	
