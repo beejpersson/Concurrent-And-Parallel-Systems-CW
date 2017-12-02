@@ -17,7 +17,7 @@
 # define M_PI 3.14159265358979323846
 // Block size
 #define BLOCKS 256
-#define THREADS_PER_BLOCK 8
+#define THREADS_PER_BLOCK 1
 
 // Used namespaces
 using namespace std;
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
     ofstream results("data.csv", ofstream::out);
 
     // *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-    int numBodies = 1024;// number of bodies
+    int numBodies = 200;// number of bodies
     int nIters = 1000; // simulation iterations
     float timeStep = 0.0002f; // time step
 
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
     results << "Test, Number of Bodies, Simulation Iterations, Blocks, Threads, Time, " << endl;
 
     // Run test iterations
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 1; ++i) {
 
         // Create json data file for visualisation
         FILE* rdata;
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
             cudaMemcpy(d_buf, buf, bytes, cudaMemcpyHostToDevice);
 
             // Kernel launch on GPU to calculate forces applied to the bodies by each other
-            calcForces<<<nBlocks,THREADS_PER_BLOCK>>>(d_p, numBodies);
+            calcForces<<<1,THREADS_PER_BLOCK>>>(d_p, numBodies);
             
             //Copy memory from device to host
             cudaMemcpy(buf, d_buf, bytes, cudaMemcpyDeviceToHost);
@@ -155,21 +155,21 @@ int main(int argc, char *argv[]) {
                 pj.ax = 0.0f; pj.ay = 0.0f; pj.az = 0.0f;
             }
 
-            //// ** Print positions of all bodies each step, for simulation renderer **
-            //fprintf(rdata, "\t[");
-            //for (int j = 0; j < numBodies; ++j) {
-            //    Body & pj = p[j];
-            //    // Convert body positions to an int proportional to screen size to be sent to data file
-            //    int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
-            //    int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
-            //    // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
-            //    int r = sqrt(pj.mass / M_PI);
-            //    fprintf(rdata, "[%d, %d, %d],", x, y, r);
-            //}
+            // ** Print positions of all bodies each step, for simulation renderer **
+            fprintf(rdata, "\t[");
+            for (int j = 0; j < numBodies; ++j) {
+                Body & pj = p[j];
+                // Convert body positions to an int proportional to screen size to be sent to data file
+                int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
+                int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
+                // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
+                int r = sqrt(pj.mass / M_PI);
+                fprintf(rdata, "[%d, %d, %d],", x, y, r);
+            }
 
-            ////fprintf(stderr, "Finished iterations %d.\n", step);
-            //fprintf(rdata, "],\n");
-            //// ** Print positions of all bodies each step, for simulation renderer **
+            //fprintf(stderr, "Finished iterations %d.\n", step);
+            fprintf(rdata, "],\n");
+            // ** Print positions of all bodies each step, for simulation renderer **
 
         }
         // * ...TO HERE *

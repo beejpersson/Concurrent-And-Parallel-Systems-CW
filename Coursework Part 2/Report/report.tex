@@ -66,7 +66,7 @@
 	
 	\IEEEtitleabstractindextext{
 		\begin{abstract}
-			For part 2 of the coursework required for the SET10108 Concurrent and Parallel Systems module at Edinburgh Napier University an \textit{n}-body simulation algorithm's performance was to be evaluated and improved by utilising parallel techniques. This report documents one such investigation where the algorithm was parallelised and the difference in its performance was measured. 
+			For part 2 of the coursework required for the SET10108 Concurrent and Parallel Systems module at Edinburgh Napier University an \textit{n}-body simulation application's performance was to be evaluated and improved by utilising parallel techniques. This report documents one such investigation where the algorithm was parallelised and the difference in its performance was measured. 
 		\end{abstract}
 		
 		\begin{IEEEkeywords}
@@ -80,26 +80,79 @@
 	\IEEEpeerreviewmaketitle
 	
 	\section{Introduction and Background}
-	\IEEEPARstart{T}{he} aim of this report is to evaluate the performance of an \textit{n}-body algorithm and attempt to improve this performance using parallel techniques. The \textit{n}-body algorithm used initially processes sequentially on a single core of the CPU, but by investigating different parallel techniques the algorithm was changed to run on either multiple CPU cores or the GPU in an attempt to increase the performance.
+	\IEEEPARstart{T}{he} aim of this report is to evaluate the performance of an \textit{n}-body application and attempt to improve this performance using parallel techniques. The \textit{n}-body algorithm used initially processes sequentially on a single core of the CPU, but by investigating different parallel techniques the algorithm was changed to run on either multiple CPU cores or the GPU in an attempt to increase the performance.
 	
 	\subsection{N-body Problem}
-	The \textit{N}-body problem is the problem of attempting to predict the positions and velocities of a group of bodies whilst they interact with each other via gravity. Finding a solution to this problem is generally done by calculating the sum of the forces acting on a each body in the system. Given a body's mass, $m\textsubscript{$i$}$, and position, $p\textsubscript{$i$}$, the force acting on it by another body, $m\textsubscript{$j$}$ and $p\textsubscript{$i$}$ is given by Equation \ref{forceeq} below \cite{meyer}:
+	The \textit{N}-body problem is the problem of attempting to predict the positions and velocities of a group of bodies whilst they interact with each other via gravity. Finding a solution to this problem is generally done by calculating the sum of the forces acting on a each body in the system and using this to estimate its velocity and position. Given a body's mass, $m\textsubscript{$i$}$, and position, $p\textsubscript{$i$}$, the force acting on it by another body, $m\textsubscript{$j$}$ and $p\textsubscript{$i$}$ is given by Equation \ref{forceeq} below (Reference \cite{meyer}):
+	
 	\begin{equation} \label{forceeq} 
 	F\textsubscript{$ij$} = \dfrac{Gm\textsubscript{$i$}m\textsubscript{$j$}(p\textsubscript{$j$} - p\textsubscript{$i$})}{||p\textsubscript{$j$} - p\textsubscript{$i$}||\textsuperscript{$3$}}
 	\end{equation}
 	
+	Where $F$ is the force and $G$ is the gravitational constant. Using this equation, and knowing that $F = ma$, the acceleration of the body can be determined. Thus the new velocity and position can be found by multiplying the acceleration by a chosen timestep. To produce an \textit{n}-body simulation this calculation can be done multiple times with a small enough timestep to accurately model the movement of the bodies in a space.
+	
+	\subsection{N-body Simulation}
+	The application used to generate an n-body simulation was written in C++ using a combination of two \textit{n}-body algorithms available online. The structure of the application was based on Mark Harris'\cite{harris}, whilst much of the maths used to calculate forces was based on Mark Lewis'\cite{lewis}. To ensure the algorithm operated as intended, the simulation was visualised by generating a data file of the body's positions and radii at each timestep and running a python script that converted that data into a video file.
+	
 	\section{Initial Analysis}
+	Upon running the application a few times and changing the number of bodies and the number of iterations of the simulation, an idea of its baseline performance was gathered. Below, in Tables \ref{table1} and \ref{table2}, the results of this initial testing on the sequential algorithm can be seen.
 	
-	\textbf{Gathered baseline data of the application. Baseline results include manipulation of variables to determine their impact on execution time. This is used to analyse the algorithm. Measurements and tools are also used to determine likely bottlenecks down to the code level.}
+	\begin{table}[!h]
+		\caption{1000 Iteration Sequential Algorithm Performance}
+		\label{table1}
+		\centering
+		\resizebox{\columnwidth}{!}{%
+			\begin{tabular}{cc}
+				\toprule
+				\multicolumn{2}{c}{Simulation Iterations = 1000} \\ \midrule
+				\multicolumn{1}{c|}{Number of Bodies} & \multicolumn{1}{c}{Average Time / ms} \\ \midrule
+				\multicolumn{1}{c|}{64} & 20.3 \\
+				\multicolumn{1}{c|}{128} & 80.87 \\
+				\multicolumn{1}{c|}{256} & 322.96\\
+				\multicolumn{1}{c|}{512} & 1289.07 \\
+				\multicolumn{1}{c|}{1024} & 5119.45 \\
+				\multicolumn{1}{c|}{2048} & 20196.89 \\
+				\multicolumn{1}{c|}{4096} & 80797.32 \\ \bottomrule
+			\end{tabular}%
+		}
+	\end{table}
+
+	\begin{table}[!h]
+		\caption{1024 bodies Sequential Algorithm Performance}
+		\label{table2}
+		\centering
+		\resizebox{\columnwidth}{!}{%
+			\begin{tabular}{cc}
+				\toprule
+				\multicolumn{2}{c}{Number of Bodies = 1024} \\ \midrule
+				\multicolumn{1}{c|}{Number of Iterations} & 
+				\multicolumn{1}{c}{Average Time / ms} \\ \midrule
+				\multicolumn{1}{c|}{250} & 1337.40 \\
+				\multicolumn{1}{c|}{500} & 2699.15 \\
+				\multicolumn{1}{c|}{750} & 3884.60 \\
+				\multicolumn{1}{c|}{1000} & 5214.85 \\
+				\multicolumn{1}{c|}{1250} & 6523.30 \\
+				\multicolumn{1}{c|}{1500} & 7799.55 \\ \bottomrule
+			\end{tabular}%
+		}
+	\end{table}
 	
-	The provided algorithm generates the image by iterating through each pixel using nested for loops. The ray tracer can also sample each pixel multiple times to produce a more accurate and detailed image but at the cost of processing time. Upon running the program a few times and changing the dimensions of the image produced and the number of samples per pixel an idea of its base-line performance was gathered.  By its nature of currently operating sequentially, increasing either the dimensions of the image produced or the number of samples per pixel increases the time it takes to produce the image with an almost perfect positive correlation. That is to say: doubling the size of the image produced or doubling the samples per pixel doubles the time taken.\\
+	The application's $calcForces$ method had complexity of O($n\textsuperscript{2}$): it contained a nested forloop, where each body in the system was compared against every other body. Given this, increasing the number of bodies results in the time taken to run 1000 iterations of the simulation to increase at an $n^2$ rate, as seen in Table \ref{table1}. However, running more simulation iterations resulted in a linear increase in the time taken to simulate 1024 bodies, with almost perfect positive correlation, as can be seen in Table \ref{table2}.
 	
-	\lstinputlisting[caption = The many nested for loops of the ray tracer algorithm with the operations within the loops removed for clarity.]{./sourceCode/forloop.cpp}
+	Further to this, a performance profiler was run to identify the possible bottlenecks and determine the best areas to attempt parallelisation to improve the application's performance. As can be seen in the code's hot path in Figure \ref{figure1}, the \textit{calcForces} method, discussed earlier, was what took up the majority of processing time.
 	
-	For smaller images at a low number of samples per pixel this results in reasonable times to produce an image, but when producing large images at a high number of samples per pixel the time to produce them was bottlenecked by only running sequentially on a single thread. Most of the time running the program is spent iterating through the nested for loops (seen in Listing 1) and so a clear solution to improving the performance of the algorithm is to run these for loops concurrently on multiple threads.
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=\columnwidth]{IMAGES/hotpath}
+		\caption{A image showing the results of running Visual Studio's Performance Profiler, where the "Hot Path" is displayed.}
+		\label{figure1}
+	\end{figure}
 	
+	This method, therefore, was the area that was parallelised in attempt to improve performance.
 	
-	\section{Methodology}	
+	\section{Methodology}
+	
+	\textit{The general approach is well defined, and the technological approach is likewise defined. Suitable justification based on initial analysis for why this approach was taken also made.}\\
 	A systematic approach was undertaken to evaluate the performance of the algorithm and attempt to measure any improvements in performance gained by parallelising the algorithm.
 	
 	The first step was to run a series of tests on the provided sequential algorithm to provide a base-line that the performance of the different parallel techniques could be compared to. These tests were all done on the same hardware, the relevant specifications of which are shown in table \ref{hardware}. The details of the tests are shown in the testing subsection below.

@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     ofstream results("data.csv", ofstream::out);
 
     // *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-    int numBodies = 1024; // number of bodies
+    int numBodies = 300; // number of bodies
     int nIters = 1000; // simulation iterations
     float timeStep = 0.0002f; // time step
 
@@ -106,21 +106,21 @@ int main(int argc, char *argv[]) {
                 pj.ax = 0.0f; pj.ay = 0.0f; pj.az = 0.0f;
             }
 
-            //// ** Print positions of all bodies each step, for simulation renderer **
-            //fprintf(rdata, "\t[");
-            //for (int j = 0; j < numBodies; ++j) {
-            //    Body & pj = p[j];
-            //    // Convert body positions to an int proportional to screen size to be sent to data file
-            //    int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
-            //    int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
-            //    // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
-            //    int r = sqrt(pj.mass / M_PI);
-            //    fprintf(rdata, "[%d, %d, %d],", x, y, r);
-            //}
+            // ** Print positions of all bodies each step, for simulation renderer **
+            fprintf(rdata, "\t[");
+            for (int j = 0; j < numBodies; ++j) {
+                Body & pj = p[j];
+                // Convert body positions to an int proportional to screen size to be sent to data file
+                int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
+                int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
+                // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
+                int r = sqrt(pj.mass / M_PI);
+                fprintf(rdata, "[%d, %d, %d],", x, y, r);
+            }
 
-            ////fprintf(stderr, "Finished iterations %d.\n", step);
-            //fprintf(rdata, "],\n");
-            //// ** Print positions of all bodies each step, for simulation renderer **
+            //fprintf(stderr, "Finished iterations %d.\n", step);
+            fprintf(rdata, "],\n");
+            // ** Print positions of all bodies each step, for simulation renderer **
 
         }
         // * ...TO HERE *

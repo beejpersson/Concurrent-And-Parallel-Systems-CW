@@ -1,3 +1,2 @@
 Test, Number of Bodies, Simulation Iterations, Blocks, Threads, Time, 
-1, 1024, 1000, 8,128,1353
-2, 1024, 1000, 8,128,1326
+1, 200, 1000, 200,1,12768
