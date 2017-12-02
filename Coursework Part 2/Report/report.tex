@@ -58,7 +58,7 @@
 		\IEEEauthorblockA{School of Computing,
 			Edinburgh Napier University, Edinburgh}% <-this % stops an unwanted space
 		
-		\thanks{November 2017}}
+		\thanks{December 2017}}
 	
 	
 	\markboth{40183743}{}
@@ -66,11 +66,11 @@
 	
 	\IEEEtitleabstractindextext{
 		\begin{abstract}
-			For part 2 of the coursework required for the SET10108 Concurrent and Parallel Systems module at Edinburgh Napier University an n-body simulation algorithm's performance was to be evaluated and improved by utilising parallel techniques. This report documents one such investigation where the algorithm was parallelised and the difference in its performance was measured. 
+			For part 2 of the coursework required for the SET10108 Concurrent and Parallel Systems module at Edinburgh Napier University an \textit{n}-body simulation algorithm's performance was to be evaluated and improved by utilising parallel techniques. This report documents one such investigation where the algorithm was parallelised and the difference in its performance was measured. 
 		\end{abstract}
 		
 		\begin{IEEEkeywords}
-			parallel, n-body, OpenMP, CUDA, C++11, performance, speedup, efficiency.
+			parallel, \textit{n}-body, OpenMP, CUDA, C++11, performance, speedup, efficiency.
 		\end{IEEEkeywords}}
 	
 	\maketitle
@@ -80,12 +80,18 @@
 	\IEEEpeerreviewmaketitle
 	
 	\section{Introduction and Background}
-	\IEEEPARstart{T}{he} aim of this report is to evaluate the performance of a ray tracing algorithm and attempt to improve this performance using parallel techniques. The ray tracer initially processes sequentially on a single core of the CPU, but by investigating different parallel techniques the algorithm was changed to run on multiple threads in an attempt to increase the performance.
+	\IEEEPARstart{T}{he} aim of this report is to evaluate the performance of an \textit{n}-body algorithm and attempt to improve this performance using parallel techniques. The \textit{n}-body algorithm used initially processes sequentially on a single core of the CPU, but by investigating different parallel techniques the algorithm was changed to run on either multiple CPU cores or the GPU in an attempt to increase the performance.
 	
-	\subsection{Ray Tracer}
-	Ray tracing is a technique used to render an image where "a ray is cast through every pixel of the image, tracing the light coming from that direction" \cite{ray}. The path is traced from an imaginary eye through each pixel on a virtual image plane and the colour of the object visible through it is calculated. It is typically capable of producing visually realistic images of high quality but at a greater computational cost compared to typical rendering techniques. Therefore it tends to be used when an image can be generated slowly ahead of time, but isn't so well suited to the real-time rendering requirements of video games.
+	\subsection{N-body Problem}
+	The \textit{N}-body problem is the problem of attempting to predict the positions and velocities of a group of bodies whilst they interact with each other via gravity. Finding a solution to this problem is generally done by calculating the sum of the forces acting on a each body in the system. Given a body's mass, $m\textsubscript{$i$}$, and position, $p\textsubscript{$i$}$, the force acting on it by another body, $m\textsubscript{$j$}$ and $p\textsubscript{$i$}$ is given by Equation \ref{forceeq} below \cite{meyer}:
+	\begin{equation} \label{forceeq} 
+	F\textsubscript{$ij$} = \dfrac{Gm\textsubscript{$i$}m\textsubscript{$j$}(p\textsubscript{$j$} - p\textsubscript{$i$})}{||p\textsubscript{$j$} - p\textsubscript{$i$}||\textsuperscript{$3$}}
+	\end{equation}
 	
 	\section{Initial Analysis}
+	
+	\textbf{Gathered baseline data of the application. Baseline results include manipulation of variables to determine their impact on execution time. This is used to analyse the algorithm. Measurements and tools are also used to determine likely bottlenecks down to the code level.}
+	
 	The provided algorithm generates the image by iterating through each pixel using nested for loops. The ray tracer can also sample each pixel multiple times to produce a more accurate and detailed image but at the cost of processing time. Upon running the program a few times and changing the dimensions of the image produced and the number of samples per pixel an idea of its base-line performance was gathered.  By its nature of currently operating sequentially, increasing either the dimensions of the image produced or the number of samples per pixel increases the time it takes to produce the image with an almost perfect positive correlation. That is to say: doubling the size of the image produced or doubling the samples per pixel doubles the time taken.\\
 	
 	\lstinputlisting[caption = The many nested for loops of the ray tracer algorithm with the operations within the loops removed for clarity.]{./sourceCode/forloop.cpp}

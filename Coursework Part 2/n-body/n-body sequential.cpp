@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     ofstream results("data.csv", ofstream::out);
 
     // *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-    int numBodies = 2048; // number of bodies
+    int numBodies = 1024; // number of bodies
     int nIters = 1000; // simulation iterations
     float timeStep = 0.0002f; // time step
 
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     results << "Test, Number of Bodies, Simulation Iterations, Time, " << endl;
 
     // Run test iterations
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 1; ++i) {
 
         // Create json data file for visualisation
         FILE* rdata;
