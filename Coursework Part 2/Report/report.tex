@@ -164,7 +164,7 @@
 		\begin{tabular}{r|l}
 			\toprule
 			CPU & i7-4790K 4 Core HT @ 4.00GHz\\ \hline
-			GPU & NVIDIA GeForce GTX 980 \\ \hline
+			GPU & NVIDIA GTX 980 @ 1.12MHz \\ \hline
 			RAM & 16.0GB\\ \hline
 			OS & Windows 10 Pro 64-bit\\ \bottomrule
 		\end{tabular}
@@ -248,7 +248,7 @@
 		}
 	\end{table}
 
-	When the kernel method was called with only a single \textit{thread per block}, the application took significantly longer to generate a 1000 iterations of the simulation of 1024 bodies than when using a higher number of  \textit{threads per block}. Whilst there was a noticeable increase in performance when run using 2 \textit{threads per block}, the average time seemed to reach its lowest at around 4 or 8 \textit{threads per block}, before again increasing at 16 or more \textit{threads per block}. These results are visualised in Figure \ref{graph1} below. The errors bars on this graph were determined by calculating the standard deviations of each set of 100 test results, which, as can be seen, were very small.
+	When the kernel method was called with only a single \textit{thread per block}, the application took significantly longer to generate a 1000 iterations of the simulation of 1024 bodies than when using a higher number of  \textit{threads per block}. Whilst there was a noticeable increase in performance when run using 2 \textit{threads per block}, the average time seemed to reach its lowest at around 4 or 8 \textit{threads per block}, before again increasing at 16 or more \textit{threads per block}. These results are visualised in Figure \ref{graph1} below. The error bars on this graph were determined by calculating the standard deviations of each set of 100 test results, which, as can be seen, were very small.
 
 	\begin{figure*}[!h]
 		\centering
@@ -282,7 +282,7 @@
 		}
 	\end{table}
 
-	As discussed in the initial analysis there is an $n^2$ positive correlation between the average time and the increasing number of bodies for the sequential application, but this also holds true for the OpenMP application. For the CUDA application, however, the relationship is more complicated. For a small number of bodies, the average time taken to generate an \textit{n}-body simulation was higher than both the OpenMP and sequential applications. But as the number of bodies became increasingly large, the average times became significantly lower than the other applications. For both parallel applications, whenever there was a more significant number of bodies being simulated, the average times in which the applications produced the data were much lower than the sequential application.
+	As discussed in the initial analysis there is an $n^2$ positive correlation between the average time and the increasing number of bodies for the sequential application, but this also holds true for the OpenMP application. For the CUDA application, however, the relationship is more complicated. For a small number of bodies, the average time taken to generate an \textit{n}-body simulation was higher than both the OpenMP and sequential applications. But as the number of bodies became increasingly large, the average times became significantly lower than the other applications. For both parallel applications, whenever there was a more significant number of bodies being simulated, the average times in which they produced the data were much lower than the sequential application.
 	
 	\begin{figure*}[!h]
 		\centering
@@ -291,9 +291,9 @@
 		\label{graph2}
 	\end{figure*}
 	
-	Below, in Figure \ref{graph2}, is the graph of these results. The errors bars on this graph were once again determined by calculating the standard deviations of each set of 100 test results and are, again, barely visible. As the number of bodies to be simulated were incremented in powers of 2, the data is discrete and the $x$-axis has been displayed using a base-2 logarithmic scale. As a result of this the $y$-axis is also displayed using a base-2 logarithmic scale so that data does not appear skewed.
+	Below, in Figure \ref{graph2}, is the graph of these results. The error bars on this graph were once again determined by calculating the standard deviations of each set of 100 test results and are, again, barely visible. As the number of bodies to be simulated were incremented in powers of 2, the data is discrete and the $x$-axis has been displayed using a base-2 logarithmic scale. As a result of this the $y$-axis is also displayed using a base-2 logarithmic scale so that data does not appear skewed.
 	
-	By running these averaged times through the formula shown in Equation \ref{efficiencyeq}, the speedup and efficiencies of these applications compared against the sequential application were calculated. The below table (Table \ref{efficiencytable}) shows these results.
+	By running these averaged times through the formula shown in Equation \ref{efficiencyeq}, the speedup and efficiencies of these applications compared against the sequential application were calculated. Table \ref{efficiencytable} below shows these results.
 
 	\begin{table}[!h]
 		\caption{Algorithmic Speedup and Efficiency Comparison}
@@ -320,43 +320,59 @@
 
 	\begin{figure*}[!h]
 		\centering
-		\includegraphics[width=1.5\columnwidth]{IMAGES/speedupcomp}
-		\caption{A graph showing the speedup of the different parallel applications compared to the sequential application when generating 1000 iterations of a simulation of differing numbers of bodies.}
+		\includegraphics[width=1.6\columnwidth]{IMAGES/speedupcomp}
+		\caption{A graph showing the speedup of the different parallel applications compared to the sequential application when generating 1000 iterations of a simulation with differing numbers of bodies.}
 		\label{graph3}
 	\end{figure*}
 	
 	\begin{figure*}[!h]
 		\centering
-		\includegraphics[width=1.5\columnwidth]{IMAGES/effcomp}
-		\caption{A graph showing the efficiency of the different parallel applications compared to the sequential application when generating 1000 iterations of a simulation of differing numbers of bodies.}
+		\includegraphics[width=1.6\columnwidth]{IMAGES/effcomp}
+		\caption{A graph showing the efficiency of the different parallel applications compared to the sequential application when generating 1000 iterations of a simulation with differing numbers of bodies.}
 		\label{graph4}
 	\end{figure*}
 
+	\begin{figure*}[!h]
+		\centering
+		\includegraphics[width=1.5\columnwidth]{IMAGES/singlethread}
+		\caption{A graph showing the average time it took each application to generate 1000 iterations of a simulation with 512 bodies whilst limited to a single thread.}
+		\label{graph5}
+	\end{figure*}	
 
-	As discussed in the testing section earlier, a single threaded performance test was also performed to help contextualise these efficiencies.
+	The positive error for speedup was determined by calculating the maximum sequential time divided by the minimum parallel time for the relevant number of bodies using their respective standard deviation error, which provides the maximum theoretical speedup. The reverse was done to determine the negative error. The speedups' maximums and minimums were then used to determine the maximum and minimum efficiency in a similar vein, which were used as their error bars. These calculated error bars are visible with a lower number of bodies, but become less significant when more bodies are added to the simulation, as is expected.
+	
+	As discussed in the testing section earlier, a single threaded performance test was also performed to help contextualise these efficiencies. The results of these can be seen below in Table \ref{singlethreadtable} and visualised in \ref{graph5}. The error bars in this graph were determined by calculating the standard deviations of the test results, as before. 
 
-	Even when ran on a single thread the parallel algorithms generated the required data in less time than the sequential algorithm. In particular, the attempt at manual multi-threading produced significantly faster results. Therefore there were some incidental optimisations of the sequential algorithm when it was parallelised.
+	\begin{table}[!h]
+		\caption{Single Thread Performance Comparison}
+		\label{singlethreadtable}
+		\centering
+		\resizebox{\columnwidth}{!}{%
+			\begin{tabular}{@{}cc@{}}
+				\toprule
+				\multicolumn{2}{c}{Iterations = 1000, No. of Bodies = 512} \\ \midrule
+				\multicolumn{1}{c|}{Application} & Average Time / ms \\ \midrule
+				\multicolumn{1}{c|}{Sequential} & 1289.07 \\
+				\multicolumn{1}{c|}{OpenMP} & 1273.42 \\
+				\multicolumn{1}{c|}{CUDA} & 112779.60 \\ \bottomrule
+			\end{tabular}%
+		}
+	\end{table}
 
-	Further to this, Figure \ref{graph4} shows that there was significant speedup for all the parallelised algorithms when ran on 8 threads instead of 4. The hardware used had 4 cores but allowed for hyper-threading to 8 threads and was potentially a reason for why the efficiencies of more than 1 arose.
+	When limited to operating on a single thread the OpenMP application produced the simulation data faster than the sequential application showing that there were some incidental optimisations being implemented when OpenMP was used, shown in Figure \ref{graph5}. However, when the CUDA application was limited to a single thread, by setting both \textit{blocks} and \textit{threads per block} to 1 in the kernel method call, the data for the simulation took a vast amount of time to be generated. The CUDA application took longer to produce the data to simulate just 512 bodies than the sequential application took for 4096 bodies, shown in Table \ref{table1}. These results help to better understand why CUDA's speedups were so high, whilst its efficiency remained low.
 	
 	\section{Conclusion}
 	\subsection{Explanation of Results and Evaluation of Performance}
-	Across all the tested algorithms, when either the dimensions of the image or the number of samples per pixel were increased, the time it took to produce the data in the pixel vector used to generate the image would increase with near perfect positive correlation. Furthermore, as shown in Figures \ref{graph1} and \ref{graph2}, independent of whether the image dimensions or the samples per pixels were changed, each of the parallelised algorithms significantly outperformed the sequential algorithm. Compared against each other, OpenMP with static scheduling was always outperformed by both OpenMP with dynamic scheduling	 and the manually multi-threaded algorithm. The manually multi-threading algorithm was generally equal to, or very slightly faster than OpenMP with dynamic scheduling.
+	Across all the tested applications, when the number of bodies to be simulated was increased, the time it took to produce the data used to generate the simulation would increase with an $n^2$ positive correlation. Furthermore, as shown in Figure \ref{graph2}, when there was a small number of bodies the OpenMP application performed slightly better than the sequential application whilst the CUDA application got outperformed by both. However, when simulating a larger and larger number of bodies, the CUDA application's performance would begin to outshine the others.
 	
-	Each of the parallelised algorithms had a speedup of 4 or more when compared to the sequential algorithm, and efficiency ratings more than 1. The reasons that the algorithm's efficiency ratings were able to be higher than 1 are likely twofold. Firstly, as shown in Figure \ref{graph3}, the parallelised algorithms were able to generate images quicker than the sequential algorithm even when operating on a single thread. This shows that there were optimisations implemented when parallelising the algorithm, this is especially true for the manually multi-threaded algorithm. Secondly, as shown in Figure \ref{graph4}, there was noticeable speedup from all the algorithms when going from running on 4 threads to running on 8. Given that there were only 4 physical cores and that the equation used to calculate efficiency uses this, a significant proportion of the speedup of the parallelised algorithms is due to the hyper-threading done by the CPU. 
+	The OpenMP application had a speedup of up to 3 when compared against the sequential algorithm, particularly when simulating a larger number of bodies, as seen in Figure \ref{graph3}. When only generating the data to simulate a few bodies, its speedup was closer to 1. This was likely due to the fact that the average time to simulate such a small number of bodies was low, even for the sequential algorithm, and the additional time the OpenMP application would take to initialise its threads becomes a more significant factor. As soon as there was a larger amount of time spent within the parallelised $calcForces$ method, the OpenMP application's performance would increase. The CUDA application, on the other hand, had speedups of less than 1 when simulating a small number of bodies. The time taken to pass the initial \textit{n}-body data from the CPU to the GPU and the time taken to pass the calculated forces back to the CPU from the GPU was a significant aspect of this. For these small numbers of bodies, the time spent inside the $calcForces$ kernel method was less than the time spent passing the data back and forth between the host and the device, resulting in processing times larger than the sequential application. When producing data to simulate a much larger number of bodies, however, the CUDA application would produce massive speedups of up to 12 (Figure \ref{graph3}) over the sequential application. The longer that was needed to calculate the forces to be applied to all the bodies, the better this application would perform in comparison to the others.
 	
-	Combined, these two effects make a significant effect on the parallelised algorithm's efficiency ratings. Whilst both parallel algorithms that used OpenMP were only very slightly faster on a single thread than the sequential algorithm, the manually multi-threaded algorithm had a speedup of 1.42 whilst still operating on a single thread. This shows that the performance gained by manually multi-threading the algorithm had much less to do with running the algorithm over multiple threads than the performance gained by the OpenMP parallelised algorithms. The speedup from the hyper-threading, however was more even across the parallelised algorithms.
+	The efficiencies of the OpenMP application were expected, each core was less efficient than the sequential application's single core, but when run in parallel the overall performance increase was noticeable. The efficiencies of the CUDA application, on the other hand, were more interesting. Even when producing the data to simulate 4096 bodies, where its speedup was almost 12, each individual core of the GPU had efficiencies of around 0.03, when compared to the sequential application's single core, as shown in Figure \ref{graph5}. When limited to a single thread the reason for this low efficiency was highlighted. It took a single thread on the GPU roughly a hundred times longer to produce the same data as the sequential application did on the CPU. This was likely as a result of the significantly lower clock speed of the GPU's cores compared against the CPU, shown in the hardware specifications, Table \ref{hardware}. Therefore, when the CUDA application was generating the data required for a large number of bodies, the kernel method was called using values of 8 for the \textit{threads per block} and the number of bodies divided by 8 for the \textit{blocks}, which created a large number of available cores resulting in very low efficiencies. The number of cores used to calculate the efficiency on the GPU was \textit{blocks} multiplied by \textit{threads per block}, which resulted in the value of $p$ being equal to the number of bodies being simulated. Therefore, whilst the average time to produce that much data was lower than both the sequential application and the OpenMP application, and its speedup much higher, it was always significantly less efficient.
 	
 	\subsection{Final Thoughts}
-	The provided sequential algorithm originally took a considerable amount of time to produce large images of quality. The attempts at parallelising the algorithm were largely successful. They all performed significantly faster than the sequential algorithm and made the time to generate large images of high detail more manageable. However, whilst running on multiple threads did provide speedup, an important part of the increased performance of the algorithms was due to external optimisations. The attempt at manually multi-threading the algorithm benefited the most from this and as such ended up outperforming both versions of parallelisation using OpenMP. In terms of increased performance purely due to running the algorithm across multiple threads the algorithm that was dynamically scheduled using OpenMP was the top performer.
+	The written sequential algorithm originally took a considerable amount of time to produce \textit{n}-body simulations with a large number of bodies. The attempts at parallelising the algorithm were largely successful. They both performed significantly faster than the sequential application when working with a large number of bodies and made the time to generate the data for long simulations of those bodies more manageable. However, for both parallelisation techniques, when simulating a smaller number of bodies, the improvements were either minor or non-existent. As expected, when parallelised across the CPU, the speedup was noticeable with only a slight loss in efficiency, whilst when parallelised across the GPU, the speedup was much more impressive but each individual thread was very inefficient. In terms of increased performance when desiring a long simulation of a large number of bodies, in comparison to the original sequential application, the CUDA parallelisation produced the most notable improvement.
 	
 	\bibliographystyle{IEEEtran}
 	\bibliography{bibliography}
-	
-	\newpage
-	\onecolumn
-	\appendices
-	\section{raytracer.cpp}
-	\lstinputlisting[caption = The source code for the raytracer.cpp including all the added parallelisation techniques.]{./sourceCode/raytracer.cpp}
 	
 \end{document}
