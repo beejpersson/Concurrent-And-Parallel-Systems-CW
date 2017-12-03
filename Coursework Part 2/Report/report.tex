@@ -152,8 +152,6 @@
 	
 	\section{Methodology}
 	
-	\textit{The general approach is well defined, and the technological approach is likewise defined. Suitable justification based on initial analysis for why this approach was taken also made.}\\
-	
 	A systematic approach was undertaken to evaluate the performance of the algorithm and to measure any improvements in performance gained by parallelising the algorithm. The parallelising technologies were chosen based on the results of the initial analysis and on their ability to maximise the performance of the application.
 	
 	The first step was to run a series of tests on the application to determine likely areas that could be parallelised and which technologies would be suitable, and to provide a baseline that the performance of the different parallel implementations could be compared to. These tests were all done on the same hardware, the relevant specifications of which are shown in table \ref{hardware}. The details of the tests are shown in the testing subsection below.
@@ -187,47 +185,92 @@
 	
 	\lstinputlisting[caption = The $calcForces$ method with CUDA adjustments made and how the kernel method is called within the $main$.]{./sourceCode/cuda.cu}
 	
-	CUDA was chosen as a notable contrast to OpenMP as it runs on the GPU and would enable a comparison between their respective performance. Further to this, given the results of the initial analysis, executing the $calcForces$ method in parallel on the GPU would provide significant speedup, especially for larger numbers of particles,due to the large number of available cores.
+	CUDA was chosen as a notable contrast to OpenMP as it runs on the GPU and would enable a comparison between their respective performance. Further to this, given the results of the initial analysis, executing the $calcForces$ method in parallel on the GPU would provide significant speedup, especially for larger numbers of particles, due to the large number of available cores.
 	
 	\subsection{Testing}
-	The same series of tests that were run on the sequential algorithm in the initial analysis were then undertaken for each implemented parallelisation. These tests were done under the same conditions and on the same hardware to eliminate discrepancies. The testing parameters used to evaluate the performance of the algorithms is outlined below.
+	The same series of tests that were run on the sequential algorithm in the initial analysis were then undertaken for each implemented parallelisation. These tests were done under the same conditions and on the same hardware to eliminate discrepancies. For the majority of the OpenMP tests, the algorithm was run on the maximum number of threads available. CUDA allowed effective cores in use to be determined as attributes in the kernel method, therefore some initial testing was done on the performance of the application with the number of \textit{threads per block} manipulated.
 	
-	For the majority of the tests, the algorithms were run on the maximum number of threads available (the test hardware allowed up to 8). The dependent variable being measured was the amount of time it took for the algorithms to produce all the data in the pixel vector, which is used to generate the final image. The independent variables were the dimensions of the image, the number of samples per pixel. First the image size was kept constant at 256x256 whilst the number of samples per pixel was incremented, by powers of 2, from 4 up to 512. After this the samples per pixel was kept constant at 16 whilst the dimensions of the image were incremented, again by powers of 2, from 128x128 up to 1024x1024. For each change in the independent variables, 100 tests were run and the time it took for the algorithm to produce the data recorded, before the average run times were calculated. Further to this, 2 tests were run with a large image size of 1024x1024 and 1024 samples per pixel. This was only done twice due to how long it took for the sequential algorithm to generate the image, but was still useful for comparison. Additionally a few tests were done on each parallel algorithm where the number of threads they ran on were controlled. This was done to help contextualise whether the potential performance increase came from the number of additional threads or from changes to the algorithm itself.
+	The testing parameters used to evaluate the performance of the algorithms and the tests themselves are listed below.
+	
+	For all tests the dependent variable being measured was the amount of time it took for the algorithms to produce the required number of iterations of the simulation. For each change in the independent variables, 100 tests were run and the time it took for the algorithm to produce the necessary values recorded, before the average run times were calculated. 
+	
+	\begin{enumerate}
+		\item CUDA's Threads Per Block
+		\begin{itemize}
+			\item 	Independent variables: threads per block (from 1 to 32 incremented by powers of 2).
+			\item 	Constants: number of simulations (1000), number of bodies (1024).
+		\end{itemize}
+		\item CUDA and OpenMP Comparisons
+		\begin{itemize}
+			\item 	Independent variables: number of bodies (from 64 to 4096 incremented by powers of 2)
+			\item 	Shared constants: number of simulations (1000).
+			\item	CUDA constants: threads per block (8), blocks (number of bodies divided by threads per block).
+			\item OpenMP constants: threads (8).
+		\end{itemize}
+		\item Single Thread Tests
+		\begin{itemize}
+			\item 	Independent variables: each algorithm (sequential, CUDA, OpenMP).	
+			\item 	Constants: number of simulations (1000), number of bodies (512), threads (1).
+		\end{itemize}
+	\end{enumerate}
 	
 	\subsection{Evaluation}
-	The results of these tests were then collated and compared to the results from the sequential algorithm's testing and used as the basis for the evaluation of	their respective performance.
+	The results of these tests were then collated and compared to the results from the sequential algorithm's testing and used as the basis for the evaluation of their respective performance.
 	
-	To represent the improved performance, the efficiency, $E$, of the algorithms was calculated using the formula shown in Equation \ref{efficiencyeq} below:
+	To represent the improved performance, the speedup, $S$, and efficiency, $E$, of the algorithms was calculated using the formula shown in Equation \ref{efficiencyeq} below:
 	
 	\begin{equation} \label{efficiencyeq} 
-	E = \dfrac{S}{p} = \dfrac{(\dfrac{T_{serial}}{T_{parallel}})}{p}
+		S = \dfrac{T_{serial}}{T_{parallel}}, \qquad E = \dfrac{S}{p}
 	\end{equation}
 	
-	Where $S$ is speedup, $p$ is the number of processor cores (the test hardware had 4), and $T_{serial}$ and $T_{parallel}$ are the sequential and parallel computational times respectively.
+	Where $T_{serial}$ and $T_{parallel}$ are the sequential and parallel computational times respectively, and $p$ is the number of processor cores.
 	
 	\section{Results and Discussion}
-	The results from the performance testing done on the algorithms can be seen summarised in tables \ref{comptable1} and \ref{comptable2} below. As discussed in the initial analysis there is an almost perfect positive correlation between the average time and the increasing samples per pixel and image dimensions for the sequential algorithm, but this also holds true for parallel algorithms. However, the times in which the parallel algorithms produced the data were much lower than the sequential algorithm, even at extreme values (Table \ref{comptable3}).
+	
+	\textit{Suitably comprehensive set of results gathered, including investigation of different variables. The results are presented well. Correct charts are used, and these are of a high-standard, including correct scaling. Speedup and efficiency measures provided for all experiments using the correct values.}
+	
+	The results of the initial \textit{threads per block} test on the CUDA application can be found in \ref{cudathreadtable}.
+	The results from the performance testing done on the algorithms can be seen summarised in tables \ref{comptable} and \ref{comptable2} below. As discussed in the initial analysis there is an almost perfect positive correlation between the average time and the increasing samples per pixel and image dimensions for the sequential algorithm, but this also holds true for parallel algorithms. However, the times in which the parallel algorithms produced the data were much lower than the sequential algorithm, even at extreme values (Table \ref{comptable3}).
 	
 	Table \ref{comptable1} and its accompanying graph (Figure \ref{graph1}) comparing the average time taken for the algorithms to generate the data required to produce a 256x256 image at different numbers of samples per pixel are shown below.
 	
+	
 	\begin{table}[!h]
-		\caption{256x256 Image Generation Performance Comparison}
-		\label{comptable1}
+		\caption{CUDA Performance: Threads Per Block}
+		\label{cudathreadtable}
 		\centering
 		\resizebox{\columnwidth}{!}{%
-			\begin{tabular}{@{}ccccc@{}}
+			\begin{tabular}{cc}
 				\toprule
-				\multicolumn{5}{c}{Image Dimensions = 256x256} \\ \midrule
-				\multicolumn{1}{c|}{Algorithm} & \multicolumn{1}{c}{Sequential} & \multicolumn{1}{c}{OMP Static} & \multicolumn{1}{c}{OMP Dynamic} & \multicolumn{1}{c}{Manual} \\ \midrule
-				\multicolumn{1}{c|}{SamplesPerPixel} & \multicolumn{4}{c}{Average Time / ms} \\ \midrule
-				\multicolumn{1}{c|}{4} & 762.57 & 187.13 & 163.98 & 168.87 \\
-				\multicolumn{1}{c|}{8} & 1536.27 & 372.96 & 328.74 & 333.76 \\
-				\multicolumn{1}{c|}{16} & 3059.91 & 728.10 & 655.39 &649.57 \\
-				\multicolumn{1}{c|}{32} & 6223.33 & 1427.95 & 1308.69 & 1283.35 \\
-				\multicolumn{1}{c|}{64} & 12510.68 & 2804.45 & 2625.94 & 2570.45 \\
-				\multicolumn{1}{c|}{128} & 24544.85 & 5589.91 & 5206.20 & 5100.70 \\
-				\multicolumn{1}{c|}{256} & 48129.36 & 11119.07 & 10354.04 & 10108.84 \\
-				\multicolumn{1}{c|}{512} & 95256.72 & 22138.99 & 20634.72 & 20348.64 \\ \bottomrule
+				\multicolumn{2}{c}{Number of Bodies = 1024, Number of Iterations = 1000} \\ \midrule
+				\multicolumn{1}{c|}{Threads Per Block} & Average Time / ms \\ \midrule
+				\multicolumn{1}{c|}{1} & 3126.17 \\
+				\multicolumn{1}{c|}{2} & 1183.69 \\
+				\multicolumn{1}{c|}{4} & 1051.98 \\
+				\multicolumn{1}{c|}{8} & 1058.97 \\
+				\multicolumn{1}{c|}{16} & 1117.77 \\
+				\multicolumn{1}{c|}{32} & 1256.76\\ \bottomrule
+			\end{tabular}%
+		}
+	\end{table}
+	
+	\begin{table}[!h]
+		\caption{1000 Iterations N-Body Simulation}
+		\label{comptable}
+		\centering
+		\resizebox{\columnwidth}{!}{%
+			\begin{tabular}{cccc}
+				\toprule
+				\multicolumn{4}{c}{Number of Iterations = 1000} \\ \midrule
+				\multicolumn{1}{c|}{Algorithm} & \multicolumn{1}{c}{Sequential} & \multicolumn{1}{c}{OpenMP} & \multicolumn{1}{c}{CUDA} \\ \midrule
+				\multicolumn{1}{c|}{Number of Bodies} & \multicolumn{3}{c}{Average Time / ms} \\ \midrule
+				\multicolumn{1}{c|}{64} & 20.39 & 15.46 & 105.75 \\
+				\multicolumn{1}{c|}{128} & 80.87 & 45.81 & 156.79 \\
+				\multicolumn{1}{c|}{256} & 322.96 & 148.66 & 285.48 \\
+				\multicolumn{1}{c|}{512} & 1289.07 & 533.66 & 528.34 \\
+				\multicolumn{1}{c|}{1024} & 5119.45 & 2007.81 & 1063.36 \\
+				\multicolumn{1}{c|}{2048} & 20196.89 & 7820.01 & 2398.78 \\
+				\multicolumn{1}{c|}{4096} & 80797.32 & 30628.95 & 6822.16 \\ \bottomrule
 			\end{tabular}%
 		}
 	\end{table}
@@ -243,24 +286,6 @@
 	
 	The results of the next tests are shown in Table \ref{comptable2}. This table shows the average time it took the algorithms to produce the data for images of varying sizes at 16 samples per pixel. This data is visualised in Figure \ref{graph2} below.
 
-	\begin{table}[!h]
-		\caption{16 Spp Image Generation Performance Comparison}
-		\label{comptable2}
-		\centering
-		\resizebox{\columnwidth}{!}{%
-			\begin{tabular}{@{}ccccc@{}}
-				\toprule
-				\multicolumn{5}{c}{Samples Per Pixel = 16} \\ \midrule
-				\multicolumn{1}{c|}{Algorithm} & \multicolumn{1}{c}{Sequential} & \multicolumn{1}{c}{OMP Static} & \multicolumn{1}{c}{OMP Dynamic} & \multicolumn{1}{c}{Manual} \\ \midrule
-				\multicolumn{1}{c|}{Image Dimensions} & \multicolumn{4}{c}{Average Time / ms} \\ \midrule
-				\multicolumn{1}{c|}{128} & 746.34 & 187.23 & 165.81 & 168.42 \\
-				\multicolumn{1}{c|}{256} & 3012.15 & 728.84 & 654.27 & 645.84 \\
-				\multicolumn{1}{c|}{512} & 11881.24 & 2817.64 & 2582.84 & 2581.12 \\
-				\multicolumn{1}{c|}{1024} & 47855.70 & 11098.78 & 10282.72 & 10190.96 \\ \bottomrule
-			\end{tabular}%
-		}
-	\end{table}
-	
 	\begin{figure}[!h]
 		\centering
 		\includegraphics[width=\columnwidth]{IMAGES/performancecomparison2}
@@ -271,22 +296,6 @@
 	Once again, the dimensions used for the size of the image were incremented in powers of 2, resulting in a similarly scaled $x$- and $y$-axis, as before. The data from these tests are in line with the previous results. Again it can be seen that the parallel algorithms outperform the sequential algorithm.
 	
 	There were also a smaller number of tests done at extreme values to compare the algorithm's performances when generating large, high detail images. This is shown in Table \ref{comptable3} below. The data was in agreement with the rest and showed that even at the extreme end the parallelised algorithms generated the images much faster.
-	
-	\begin{table}[!h]
-		\caption{Extreme Spp and Image Size Performance Comparison}
-		\label{comptable3}
-		\centering
-		\resizebox{\columnwidth}{!}{%
-			\begin{tabular}{@{}ccccc@{}}
-				\toprule
-				\multicolumn{5}{c}{Image Dimensions = 1024, Samples Per Pixel = 1024} \\ \midrule
-				\multicolumn{1}{c|}{Algorithm} & \multicolumn{1}{c}{Sequential} & \multicolumn{1}{c}{OMP Static} & \multicolumn{1}{c}{OMP Dynamic} & \multicolumn{1}{c}{Manual} \\ \midrule
-				\multicolumn{1}{c|}{Test No.} & \multicolumn{4}{c}{Time / ms} \\ \midrule
-				\multicolumn{1}{c|}{1} & 3002631 & 709916 & 659067 & 651456 \\
-				\multicolumn{1}{c|}{2} & 3001927 & 708573 & 658709 & 647313 \\ \bottomrule
-			\end{tabular}%
-		}
-	\end{table}
 	
 	By running these averaged times through the formula shown in Equation \ref{efficiencyeq}, the efficiency of these algorithms compared against the sequential algorithm was calculated. The below table (Table \ref{efficiencytable}) shows these efficiencies for the first set of test results.
 
