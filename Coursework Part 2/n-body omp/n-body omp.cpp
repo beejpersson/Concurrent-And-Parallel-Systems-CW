@@ -33,7 +33,7 @@ void initBodies(Body *p, int n) {
 
 // Method to calculate the forces acting on each body based on their distances from each other
 void calcForces(Body *p, int n) {
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for num_threads(1) schedule(static)
     for (int i = 0; i < n; ++i) {
         Body & pi = p[i];
         for (int j = i + 1; j < n; ++j) {
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     ofstream results("data.csv", ofstream::out);
 
     // *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-    int numBodies = 2048; // number of bodies
+    int numBodies = 512; // number of bodies
     int nIters = 1000; // simulation iterations
     float timeStep = 0.0002f; // time step
 
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     results << "Test, Number of Bodies, Simulation Iterations, Time, " << endl;
 
     // Run test iterations
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 50; ++i) {
 
         // Create json data file for visualisation
         FILE* rdata;
