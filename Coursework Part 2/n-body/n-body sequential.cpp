@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     ofstream results("data.csv", ofstream::out);
 
     // *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-    int numBodies = 1024; // number of bodies
+    int numBodies = 128; // number of bodies
     int nIters = 1000; // simulation iterations
     float timeStep = 0.0002f; // time step
 
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     results << "Test, Number of Bodies, Simulation Iterations, Time, " << endl;
 
     // Run test iterations
-    for (int i = 0; i < 1; ++i) {
+    for (int i = 0; i < 100; ++i) {
 
         // Create json data file for visualisation
         FILE* rdata;
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
                 pj.ax = 0.0f; pj.ay = 0.0f; pj.az = 0.0f;
             }
 
-            // ** Print positions of all bodies each step, for simulation renderer **
+            // ** Print positions of all bodies each step, for simulation renderer, comment out section for testing **
             fprintf(rdata, "\t[");
             for (int j = 0; j < numBodies; ++j) {
                 Body & pj = p[j];
@@ -120,13 +120,13 @@ int main(int argc, char *argv[]) {
 
             //fprintf(stderr, "Finished iterations %d.\n", step);
             fprintf(rdata, "],\n");
-            // ** Print positions of all bodies each step, for simulation renderer **
-
+            // ** Print positions of all bodies each step, for simulation renderer, comment out section for testing **
         }
         // * ...TO HERE *
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
         auto time_span = duration_cast<milliseconds>(t2 - t1).count();
 
+        // Close json data file
         fprintf(rdata, "]");
         fclose(rdata);
 

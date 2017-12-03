@@ -15,8 +15,7 @@
 #define GRAV_CONST 6.67408e-11f
 // Pi
 # define M_PI 3.14159265358979323846
-// Block size
-#define BLOCKS 256
+// Threads per block size
 #define THREADS_PER_BLOCK 8
 
 // Used namespaces
@@ -98,7 +97,7 @@ int main(int argc, char *argv[]) {
     ofstream results("data.csv", ofstream::out);
 
     // *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-    int numBodies = 512;// number of bodies
+    int numBodies = 128;// number of bodies
     int nIters = 1000; // simulation iterations
     float timeStep = 0.0002f; // time step
 
@@ -106,7 +105,7 @@ int main(int argc, char *argv[]) {
     results << "Test, Number of Bodies, Simulation Iterations, Blocks, Threads, Time, " << endl;
 
     // Run test iterations
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 100; ++i) {
 
         // Create json data file for visualisation
         FILE* rdata;
@@ -128,6 +127,7 @@ int main(int argc, char *argv[]) {
         cudaMalloc((void **)&d_buf, bytes);
         Body *d_p = (Body*)d_buf;
 
+        // Define block size as number of bodies / threads per block
         int nBlocks = (numBodies + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
         // * TIME FROM HERE... *
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
             cudaMemcpy(d_buf, buf, bytes, cudaMemcpyHostToDevice);
 
             // Kernel launch on GPU to calculate forces applied to the bodies by each other
-            calcForces<<<1,1>>>(d_p, numBodies);
+            calcForces<<<nBlocks,THREADS_PER_BLOCK>>>(d_p, numBodies);
             
             //Copy memory from device to host
             cudaMemcpy(buf, d_buf, bytes, cudaMemcpyDeviceToHost);
@@ -155,27 +155,27 @@ int main(int argc, char *argv[]) {
                 pj.ax = 0.0f; pj.ay = 0.0f; pj.az = 0.0f;
             }
 
-            //// ** Print positions of all bodies each step, for simulation renderer **
-            //fprintf(rdata, "\t[");
-            //for (int j = 0; j < numBodies; ++j) {
-            //    Body & pj = p[j];
-            //    // Convert body positions to an int proportional to screen size to be sent to data file
-            //    int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
-            //    int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
-            //    // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
-            //    int r = sqrt(pj.mass / M_PI);
-            //    fprintf(rdata, "[%d, %d, %d],", x, y, r);
-            //}
+            // ** Print positions of all bodies each step, for simulation renderer, comment out section for testing **
+            fprintf(rdata, "\t[");
+            for (int j = 0; j < numBodies; ++j) {
+                Body & pj = p[j];
+                // Convert body positions to an int proportional to screen size to be sent to data file
+                int x = ((pj.x * 0.5f) + 0.5f) * 800.0f;
+                int y = ((pj.y * 0.5f) + 0.5f) * 800.0f;
+                // Calculate radius from mass (assuming flat and equal densities of 1) to be send to data file
+                int r = sqrt(pj.mass / M_PI);
+                fprintf(rdata, "[%d, %d, %d],", x, y, r);
+            }
 
-            ////fprintf(stderr, "Finished iterations %d.\n", step);
-            //fprintf(rdata, "],\n");
-            //// ** Print positions of all bodies each step, for simulation renderer **
-
+            //fprintf(stderr, "Finished iterations %d.\n", step);
+            fprintf(rdata, "],\n");
+            // ** Print positions of all bodies each step, for simulation renderer, comment out section for testing **
         }
         // * ...TO HERE *
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
         auto time_span = duration_cast<milliseconds>(t2 - t1).count();
 
+        // Close json data file
         fprintf(rdata, "]");
         fclose(rdata);
 
