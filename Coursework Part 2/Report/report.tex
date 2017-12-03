@@ -153,37 +153,39 @@
 	\section{Methodology}
 	
 	\textit{The general approach is well defined, and the technological approach is likewise defined. Suitable justification based on initial analysis for why this approach was taken also made.}\\
-	A systematic approach was undertaken to evaluate the performance of the algorithm and attempt to measure any improvements in performance gained by parallelising the algorithm.
 	
-	The first step was to run a series of tests on the provided sequential algorithm to provide a base-line that the performance of the different parallel techniques could be compared to. These tests were all done on the same hardware, the relevant specifications of which are shown in table \ref{hardware}. The details of the tests are shown in the testing subsection below.
+	A systematic approach was undertaken to evaluate the performance of the algorithm and to measure any improvements in performance gained by parallelising the algorithm. The parallelising technologies were chosen based on the results of the initial analysis and on their ability to maximise the performance of the application.
+	
+	The first step was to run a series of tests on the application to determine likely areas that could be parallelised and which technologies would be suitable, and to provide a baseline that the performance of the different parallel implementations could be compared to. These tests were all done on the same hardware, the relevant specifications of which are shown in table \ref{hardware}. The details of the tests are shown in the testing subsection below.
 	
 	\begin{table}[!h]
 		\renewcommand{\arraystretch}{1.3}
 		\caption{Hardware Specifications}
 		\label{hardware}
 		\centering
-		\begin{tabular}{|l|l|}
-			\hline
-			Processor & i7-4790K 4 Core HT @ 4.00GHz\\ \hline
+		\begin{tabular}{r|l}
+			\toprule
+			CPU & i7-4790K 4 Core HT @ 4.00GHz\\ \hline
+			GPU & NVIDIA GeForce GTX 980 \\ \hline
 			RAM & 16.0GB\\ \hline
-			OS & Windows 10 Pro 64-bit\\ \hline
+			OS & Windows 10 Pro 64-bit\\ \bottomrule
 		\end{tabular}
 	\end{table}
 	
 	\subsection{Parallelisation Techniques}
-	After these benchmarks for the sequential algorithm were recorded, a few different parallelising techniques were applied to the algorithm and some preliminary tests were run. The intention here was to ensure that the techniques had been implemented correctly and to gain an idea of their relative performance. The techniques used were manual multi-threading and OpenMP with both static and dynamic scheduling.\\
-	
-	\subsubsection{Manual Multi-Threading}
-	To parallelise the algorithm using manual multi-threading the set of for loops seen in Listing 1 were added to a single method which could then be run on multiple threads, as shown in Listing 2.
-	
-	\lstinputlisting[caption = The for loop used to run the forLoopAlgorithm method accross the required number of threads. The variables that are passed to the method are removed for clarity.]{./sourceCode/manualmulti-threading.cpp}
+	After these benchmarks for the sequential algorithm were recorded, the chosen parallelising techniques were applied to the algorithm and some preliminary simulations were run, each time checking the visualised output of the application. The intention here was twofold; to ensure that the techniques had been implemented correctly, that the parallelised algorithm was still producing the same simulation as the sequential application, and to gain an idea of their relative performance. The techniques used were OpenMP and CUDA, and the parallelisation was only applied to the $calcForces$ method as it took the majority of processing time and in an attempt to reduce accidental speedup to the application beyond simply parallelising the sequential algorithm itself.
 	
 	\subsubsection{OpenMP}
 	OpenMP is an API that supports shared-memory parallel programming and allows some additional manipulations in the scheduling that were used in an attempt to increase performance. The pre-processor argument shown in Listing 3 was used to parallelise the outer for loop, allowing the algorithm to be run across multiple threads.
 	
 	\lstinputlisting[caption = The OpenMP parallel for used to parallelise the shown for loop across the number of threads desired. The removed nested for loops can be seen in Listing 1.]{./sourceCode/omp.cpp}
 	
-	OpenMP's parallel for function comes with a \textit{schedule} clause, seen in Listing 3, that can be used to change the way it spreads the workload across the threads. By default, OpenMP statically assigns each for loop iteration to a thread. However, if each iteration takes a different amount of time, it can be beneficial to use dynamic scheduling. When scheduled dynamically the threads can request work when ready and be assigned the next iteration that hasn't been executed yet. Given that this may further improve the performance of the ray tracing algorithm, both types of scheduling were tested.
+	OpenMP's parallel for function comes with a \textit{schedule} clause, seen in Listing 1, that can be used to change the way it spreads the workload across the threads. By default, OpenMP statically assigns each for loop iteration to a thread. However, if each iteration takes a different amount of time, it can be beneficial to use dynamic scheduling. When scheduled dynamically the threads can request work when ready and be assigned the next iteration that hasn't been executed yet. Given that this may further improve the performance of the ray tracing algorithm, both types of scheduling were tested.
+	
+	\subsubsection{CUDA}
+	CUDA is an API and parallel computing platform created by NVIDIA that allows software to utilise a CUDA-enabled GPU's virtual instruction set and execute the application in parallel using compute kernels. CUDA was chosen as the initial analysis showed that the vast majority of processing time was spent calculating the forces on each particle. Executing the $calcForces$ method in parallel on the GPU would therefore provide significant speedup, especially for larger numbers of particles. CUDA allows the user to determine the number of \textit{blocks} and \textit{threads per block}, showing in Listing 2, to be used for the kernel method and some testing was done to determine the optimal ratios. Below is an excerpt from the CUDA application.
+	
+	\lstinputlisting[caption = The $calcForces$ method with CUDA adjustments made and how the kernel method is called within the $main$.]{./sourceCode/cuda.cu}
 	
 	\subsection{Testing}
 	The same series of tests that were run on the sequential algorithm were then undertaken for each implemented parallelisation. These tests were done under the same conditions and on the same hardware to eliminate discrepancies. The testing parameters used to evaluate the performance of the algorithms is outlined below.

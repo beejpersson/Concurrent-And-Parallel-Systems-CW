@@ -1,5 +1,6 @@
-#pragma omp parallel for num_threads(num_threads) private(y, r) schedule(dynamic)
-    for (y = 0; y < dimension; ++y)
+void calcForces(Body *p, int numBodies) {
+#pragma omp parallel for schedule(static)
+    for (int i = 0; i < numBodies; ++i)
     {
-        .../*nested for loops*/
+        /* nested forloop force calculations */
     }
