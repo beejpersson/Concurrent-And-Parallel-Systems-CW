@@ -125,7 +125,7 @@
 			\begin{tabular}{cc}
 				\toprule
 				\multicolumn{2}{c}{Number of Bodies = 1024} \\ \midrule
-				\multicolumn{1}{c|}{Number of Iterations} & 
+				\multicolumn{1}{c|}{Simulation Iterations} & 
 				\multicolumn{1}{c}{Average Time / ms} \\ \midrule
 				\multicolumn{1}{c|}{250} & 1337.40 \\
 				\multicolumn{1}{c|}{500} & 2699.15 \\
@@ -188,29 +188,29 @@
 	CUDA was chosen as a notable contrast to OpenMP as it runs on the GPU and would enable a comparison between their respective performance. Further to this, given the results of the initial analysis, executing the $calcForces$ method in parallel on the GPU would provide significant speedup, especially for larger numbers of particles, due to the large number of available cores.
 	
 	\subsection{Testing}
-	The same series of tests that were run on the sequential algorithm in the initial analysis were then undertaken for each implemented parallelisation. These tests were done under the same conditions and on the same hardware to eliminate discrepancies. For the majority of the OpenMP tests, the algorithm was run on the maximum number of threads available. CUDA allowed effective cores in use to be determined as attributes in the kernel method, therefore some initial testing was done on the performance of the application with the number of \textit{threads per block} manipulated.
+	The same series of tests that were run on the sequential algorithm in the initial analysis were then undertaken for each implemented parallelisation. These tests were done under the same conditions and on the same hardware to eliminate discrepancies. For the majority of the OpenMP tests, the algorithm was run on the maximum number of threads available. CUDA allowed effective cores in use to be determined as attributes in the kernel method, therefore some initial testing was done on the performance of the application with the number of \textit{threads per block} manipulated to identify the number of \textit{blocks} and \textit{threads per block} that would be used in the later tests.
 	
 	The testing parameters used to evaluate the performance of the algorithms and the tests themselves are listed below.
 	
-	For all tests the dependent variable being measured was the amount of time it took for the algorithms to produce the required number of iterations of the simulation. For each change in the independent variables, 100 tests were run and the time it took for the algorithm to produce the necessary values recorded, before the average run times were calculated. 
+	For all tests the dependent variable being measured was the amount of time it took for the applications to produce the required number of iterations of the simulation. For each change in the independent variables, 100 tests were run and the time it took for the algorithm to produce the necessary values recorded, before the average run times were calculated. 
 	
 	\begin{enumerate}
 		\item CUDA's Threads Per Block
 		\begin{itemize}
 			\item 	Independent variables: threads per block (from 1 to 32 incremented by powers of 2).
-			\item 	Constants: number of simulations (1000), number of bodies (1024).
+			\item 	Constants: simulation iterations (1000), number of bodies (1024).
 		\end{itemize}
 		\item CUDA and OpenMP Comparisons
 		\begin{itemize}
 			\item 	Independent variables: number of bodies (from 64 to 4096 incremented by powers of 2)
-			\item 	Shared constants: number of simulations (1000).
+			\item 	Shared constants: simulation iterations (1000).
 			\item	CUDA constants: threads per block (8), blocks (number of bodies divided by threads per block).
 			\item OpenMP constants: threads (8).
 		\end{itemize}
 		\item Single Thread Tests
 		\begin{itemize}
 			\item 	Independent variables: each algorithm (sequential, CUDA, OpenMP).	
-			\item 	Constants: number of simulations (1000), number of bodies (512), threads (1).
+			\item 	Constants: simulation iterations (1000), number of bodies (512), threads (1).
 		\end{itemize}
 	\end{enumerate}
 	
@@ -223,17 +223,11 @@
 		S = \dfrac{T_{serial}}{T_{parallel}}, \qquad E = \dfrac{S}{p}
 	\end{equation}
 	
-	Where $T_{serial}$ and $T_{parallel}$ are the sequential and parallel computational times respectively, and $p$ is the number of processor cores.
+	Where $T_{serial}$ and $T_{parallel}$ are the sequential and parallel computational times respectively, and $p$ is the number of processor cores. When calculating the efficiency of the OpenMP application, $p$ was set to 4, which was the number of available CPU cores on the test hardware. However, determining $p$ for the CUDA application was more complex. Whilst the GPU used to test the application was listed as having 2048 cores, that wasn't necessarily the number of hardware cores assigned when running the kernel method. Instead, $p$ was calculated as the number of \textit{blocks} multiplied by the number of \textit{threads per block} set as attributes in the kernel method, as this results in the total number of threads doing work on the GPU.
 	
 	\section{Results and Discussion}
 	
-	\textit{Suitably comprehensive set of results gathered, including investigation of different variables. The results are presented well. Correct charts are used, and these are of a high-standard, including correct scaling. Speedup and efficiency measures provided for all experiments using the correct values.}
-	
-	The results of the initial \textit{threads per block} test on the CUDA application can be found in \ref{cudathreadtable}.
-	The results from the performance testing done on the algorithms can be seen summarised in tables \ref{comptable} and \ref{comptable2} below. As discussed in the initial analysis there is an almost perfect positive correlation between the average time and the increasing samples per pixel and image dimensions for the sequential algorithm, but this also holds true for parallel algorithms. However, the times in which the parallel algorithms produced the data were much lower than the sequential algorithm, even at extreme values (Table \ref{comptable3}).
-	
-	Table \ref{comptable1} and its accompanying graph (Figure \ref{graph1}) comparing the average time taken for the algorithms to generate the data required to produce a 256x256 image at different numbers of samples per pixel are shown below.
-	
+	The results of the initial test on the CUDA application can be found in Table \ref{cudathreadtable} below.
 	
 	\begin{table}[!h]
 		\caption{CUDA Performance: Threads Per Block}
@@ -242,7 +236,7 @@
 		\resizebox{\columnwidth}{!}{%
 			\begin{tabular}{cc}
 				\toprule
-				\multicolumn{2}{c}{Number of Bodies = 1024, Number of Iterations = 1000} \\ \midrule
+				\multicolumn{2}{c}{Number of Bodies = 1024, Simulation Iterations = 1000} \\ \midrule
 				\multicolumn{1}{c|}{Threads Per Block} & Average Time / ms \\ \midrule
 				\multicolumn{1}{c|}{1} & 3126.17 \\
 				\multicolumn{1}{c|}{2} & 1183.69 \\
@@ -253,7 +247,20 @@
 			\end{tabular}%
 		}
 	\end{table}
+
+	When the kernel method was called with only a single \textit{thread per block}, the application took significantly longer to generate a 1000 iterations of the simulation of 1024 bodies than when using a higher number of  \textit{threads per block}. Whilst there was a noticeable increase in performance when run using 2 \textit{threads per block}, the average time seemed to reach its lowest at around 4 or 8 \textit{threads per block}, before again increasing at 16 or more \textit{threads per block}. These results are visualised in Figure \ref{graph1} below. The errors bars on this graph were determined by calculating the standard deviations of each set of 100 test results, which, as can be seen, were very small.
+
+	\begin{figure*}[!h]
+		\centering
+		\includegraphics[width=1.5\columnwidth]{IMAGES/cudathreads}
+		\caption{A graph showing the average time it took the CUDA application to generate the simulation data when changing the allocated number of threads per block on the GPU.}
+		\label{graph1}
+	\end{figure*}
+
+	Given these results, 8 \textit{threads per block} were used for all CUDA performance tests undertaken afterwards, and \textit{blocks} were set to the number of bodies being tested divided by \textit{threads per block}, to ensure each body would receive its own thread, maximising use of the available hardware.
 	
+	The results from the performance testing done on the applications can be seen summarised in Table \ref{comptable} below. 
+
 	\begin{table}[!h]
 		\caption{1000 Iterations N-Body Simulation}
 		\label{comptable}
@@ -274,30 +281,19 @@
 			\end{tabular}%
 		}
 	\end{table}
+
+	As discussed in the initial analysis there is an $n^2$ positive correlation between the average time and the increasing number of bodies for the sequential application, but this also holds true for the OpenMP application. For the CUDA application, however, the relationship is more complicated. For a small number of bodies, the average time taken to generate an \textit{n}-body simulation was higher than both the OpenMP and sequential applications. But as the number of bodies became increasingly large, the average times became significantly lower than the other applications. For both parallel applications, whenever there was a more significant number of bodies being simulated, the average times in which the applications produced the data were much lower than the sequential application.
 	
 	\begin{figure*}[!h]
 		\centering
-		\includegraphics[width=\textwidth]{IMAGES/performancecomparison1}
-		\caption{A graph showing the average time it took each algorithm to generate a 256x256 image at different numbers of samples per pixel.}
-		\label{graph1}
+		\includegraphics[width=1.5\columnwidth]{IMAGES/perfcomp1}
+		\caption{A graph showing the average time it took each application to generate 1000 iterations of a simulation with differing numbers of bodies.}
+		\label{graph2}
 	\end{figure*}
 	
-	As the number of samples per pixel were incremented in powers of 2, the data is discrete and the $x$-axis has been displayed using a base-2 logarithmic scale. As a result of this the $y$-axis is also displayed using a base-2 logarithmic scale so that data does not appear skewed. Here we can see that all the parallel algorithms show significant speedup over the sequential algorithm, with the manual multi-threading often being the fastest, if only by a small margin.
+	Below, in Figure \ref{graph2}, is the graph of these results. The errors bars on this graph were once again determined by calculating the standard deviations of each set of 100 test results and are, again, barely visible. As the number of bodies to be simulated were incremented in powers of 2, the data is discrete and the $x$-axis has been displayed using a base-2 logarithmic scale. As a result of this the $y$-axis is also displayed using a base-2 logarithmic scale so that data does not appear skewed.
 	
-	The results of the next tests are shown in Table \ref{comptable2}. This table shows the average time it took the algorithms to produce the data for images of varying sizes at 16 samples per pixel. This data is visualised in Figure \ref{graph2} below.
-
-	\begin{figure}[!h]
-		\centering
-		\includegraphics[width=\columnwidth]{IMAGES/performancecomparison2}
-		\caption{A graph showing the average time it took each algorithm to generate images of varying dimensions at 16 samples per pixel.}
-		\label{graph2}
-	\end{figure}
-
-	Once again, the dimensions used for the size of the image were incremented in powers of 2, resulting in a similarly scaled $x$- and $y$-axis, as before. The data from these tests are in line with the previous results. Again it can be seen that the parallel algorithms outperform the sequential algorithm.
-	
-	There were also a smaller number of tests done at extreme values to compare the algorithm's performances when generating large, high detail images. This is shown in Table \ref{comptable3} below. The data was in agreement with the rest and showed that even at the extreme end the parallelised algorithms generated the images much faster.
-	
-	By running these averaged times through the formula shown in Equation \ref{efficiencyeq}, the efficiency of these algorithms compared against the sequential algorithm was calculated. The below table (Table \ref{efficiencytable}) shows these efficiencies for the first set of test results.
+	By running these averaged times through the formula shown in Equation \ref{efficiencyeq}, the speedup of these applications compared against the sequential application was calculated. The below table (Table \ref{efficiencytable}) shows these speedups.
 
 	\begin{table}[!h]
 		\caption{Algorithmic Efficiency Comparison}
