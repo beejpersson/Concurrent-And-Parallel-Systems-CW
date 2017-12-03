@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     ofstream results("data.csv", ofstream::out);
 
     // *** These parameters can be manipulated in the algorithm to modify work undertaken ***
-    int numBodies = 300; // number of bodies
+    int numBodies = 1024; // number of bodies
     int nIters = 1000; // simulation iterations
     float timeStep = 0.0002f; // time step
 

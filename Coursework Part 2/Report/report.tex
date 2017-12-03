@@ -139,7 +139,7 @@
 	
 	The application's $calcForces$ method had complexity of O($n\textsuperscript{2}$): it contained a nested forloop, where each body in the system was compared against every other body. Given this, increasing the number of bodies results in the time taken to run 1000 iterations of the simulation to increase at an $n^2$ rate, as seen in Table \ref{table1}. However, running more simulation iterations resulted in a linear increase in the time taken to simulate 1024 bodies, with almost perfect positive correlation, as can be seen in Table \ref{table2}.
 	
-	Further to this, a performance profiler was run to identify the possible bottlenecks and determine the best areas to attempt parallelisation to improve the application's performance. As can be seen in the code's hot path in Figure \ref{figure1}, the \textit{calcForces} method, discussed earlier, was what took up the majority of processing time.
+	Further to this, a performance profiler was run to identify the possible bottlenecks and determine the best areas to attempt parallelisation to improve the application's performance. As can be seen in the code's hot path in Figure \ref{figure1}, the \textit{calcForces} method, discussed earlier, was what took up the majority of processing time when there was a significant number of bodies.
 	
 	\begin{figure}[!h]
 		\centering
@@ -148,7 +148,7 @@
 		\label{figure1}
 	\end{figure}
 	
-	This method, therefore, was the area that was parallelised in attempt to improve performance.
+	This method, therefore, was the area that was parallelised in attempt to improve performance. However, when there was only 2 bodies the method executed very quickly showing that each individual comparison between bodies required little processing time. The high processing time when there was a large number of bodies was simply that there were so many comparisons to be made. This opened up GPU parallelisation as a potential solution given the large number of lower clock-speed cores.
 	
 	\section{Methodology}
 	
@@ -176,19 +176,21 @@
 	After these benchmarks for the sequential algorithm were recorded, the chosen parallelising techniques were applied to the algorithm and some preliminary simulations were run, each time checking the visualised output of the application. The intention here was twofold; to ensure that the techniques had been implemented correctly, that the parallelised algorithm was still producing the same simulation as the sequential application, and to gain an idea of their relative performance. The techniques used were OpenMP and CUDA, and the parallelisation was only applied to the $calcForces$ method as it took the majority of processing time and in an attempt to reduce accidental speedup to the application beyond simply parallelising the sequential algorithm itself.
 	
 	\subsubsection{OpenMP}
-	OpenMP is an API that supports shared-memory parallel programming and allows some additional manipulations in the scheduling that were used in an attempt to increase performance. The pre-processor argument shown in Listing 3 was used to parallelise the outer for loop, allowing the algorithm to be run across multiple threads.
+	OpenMP is an API that supports shared-memory parallel programming and allows some additional manipulations in the scheduling that were used in an attempt to increase performance. The pre-processor argument shown in Listing 1 was used to parallelise the outer forloop, allowing the force calculation algorithm to be run across multiple threads.
 	
-	\lstinputlisting[caption = The OpenMP parallel for used to parallelise the shown for loop across the number of threads desired. The removed nested for loops can be seen in Listing 1.]{./sourceCode/omp.cpp}
+	\lstinputlisting[caption = The OpenMP parallel for used to parallelise the shown forloop across the number of threads desired.]{./sourceCode/omp.cpp}
 	
-	OpenMP's parallel for function comes with a \textit{schedule} clause, seen in Listing 1, that can be used to change the way it spreads the workload across the threads. By default, OpenMP statically assigns each for loop iteration to a thread. However, if each iteration takes a different amount of time, it can be beneficial to use dynamic scheduling. When scheduled dynamically the threads can request work when ready and be assigned the next iteration that hasn't been executed yet. Given that this may further improve the performance of the ray tracing algorithm, both types of scheduling were tested.
+	OpenMP's parallel for function comes with a \textit{schedule} clause, seen in Listing 1, that was set to static as each iteration of the loop took the same amount of time to process. OpenMP was chosen as a parallel technique as the initial analysis showed that the $calcForces$ method was taking a long time to compute when run sequentially, and parallelising this algorithm so that it could run on multiple threads simultaneously would improve the performance of the application. OpenMP was chosen as it provides this parallelisation simply and effectively across the available CPU cores.
 	
 	\subsubsection{CUDA}
-	CUDA is an API and parallel computing platform created by NVIDIA that allows software to utilise a CUDA-enabled GPU's virtual instruction set and execute the application in parallel using compute kernels. CUDA was chosen as the initial analysis showed that the vast majority of processing time was spent calculating the forces on each particle. Executing the $calcForces$ method in parallel on the GPU would therefore provide significant speedup, especially for larger numbers of particles. CUDA allows the user to determine the number of \textit{blocks} and \textit{threads per block}, showing in Listing 2, to be used for the kernel method and some testing was done to determine the optimal ratios. Below is an excerpt from the CUDA application.
+	CUDA is an API and parallel computing platform created by NVIDIA that allows software to utilise a CUDA-enabled GPU's virtual instruction set and execute the application in parallel using compute kernels. CUDA allows the user to determine the number of \textit{blocks} and \textit{threads per block}, showing in Listing 2, to be used for the kernel method and some testing was done to determine the optimal ratios. Below is an excerpt from the CUDA application.
 	
 	\lstinputlisting[caption = The $calcForces$ method with CUDA adjustments made and how the kernel method is called within the $main$.]{./sourceCode/cuda.cu}
 	
+	CUDA was chosen as a notable contrast to OpenMP as it runs on the GPU and would enable a comparison between their respective performance. Further to this, given the results of the initial analysis, executing the $calcForces$ method in parallel on the GPU would provide significant speedup, especially for larger numbers of particles,due to the large number of available cores.
+	
 	\subsection{Testing}
-	The same series of tests that were run on the sequential algorithm were then undertaken for each implemented parallelisation. These tests were done under the same conditions and on the same hardware to eliminate discrepancies. The testing parameters used to evaluate the performance of the algorithms is outlined below.
+	The same series of tests that were run on the sequential algorithm in the initial analysis were then undertaken for each implemented parallelisation. These tests were done under the same conditions and on the same hardware to eliminate discrepancies. The testing parameters used to evaluate the performance of the algorithms is outlined below.
 	
 	For the majority of the tests, the algorithms were run on the maximum number of threads available (the test hardware allowed up to 8). The dependent variable being measured was the amount of time it took for the algorithms to produce all the data in the pixel vector, which is used to generate the final image. The independent variables were the dimensions of the image, the number of samples per pixel. First the image size was kept constant at 256x256 whilst the number of samples per pixel was incremented, by powers of 2, from 4 up to 512. After this the samples per pixel was kept constant at 16 whilst the dimensions of the image were incremented, again by powers of 2, from 128x128 up to 1024x1024. For each change in the independent variables, 100 tests were run and the time it took for the algorithm to produce the data recorded, before the average run times were calculated. Further to this, 2 tests were run with a large image size of 1024x1024 and 1024 samples per pixel. This was only done twice due to how long it took for the sequential algorithm to generate the image, but was still useful for comparison. Additionally a few tests were done on each parallel algorithm where the number of threads they ran on were controlled. This was done to help contextualise whether the potential performance increase came from the number of additional threads or from changes to the algorithm itself.
 	
